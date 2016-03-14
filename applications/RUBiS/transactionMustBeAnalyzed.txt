@@ -1,0 +1,16 @@
+AboutMe doPost 778
+BrowseRegions regionList 27
+BrowseCategories doGet 90
+BuyNow doGet 56
+PutBid doGet 51
+PutComment doGet 48
+RegisterItem doGet 44
+RegisterUser doGet 45
+SearchItemsByCategory itemList 48
+SearchItemsByRegion itemList 41
+StoreBid doPost 74
+StoreBuyNow doPost 77
+StoreComment doPost 60
+ViewBidHistory doPost 116
+ViewItem doGet 47
+ViewUserInfo doPost 120

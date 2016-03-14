@@ -1,0 +1,2 @@
+(ALL j v. (j, v) : itemsTable..itemsTable_contents --> v..itemsRecord_quantity..ndi_value >= 0)
+(ALL j k e m. (j,e):usersTable..usersTable_contents & (k,m): usersTable..usersTable_contents & e..usersRecord_nickname = m..usersRecord_nickname-->j = k & e = m)

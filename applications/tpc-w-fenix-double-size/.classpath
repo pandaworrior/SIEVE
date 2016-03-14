@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="populate/|servlets/" kind="src" path="tpcw"/>
+	<classpathentry kind="src" path="tpcw/populate"/>
+	<classpathentry kind="src" path="tpcw/servlets"/>
+	<classpathentry kind="lib" path="mysql-connector-java-5.1.5-bin.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

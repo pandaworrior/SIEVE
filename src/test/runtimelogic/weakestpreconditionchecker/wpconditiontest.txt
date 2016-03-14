@@ -1,0 +1,2 @@
+fingerprint:1.2.3.4
+weakestprecondition:(wp1)

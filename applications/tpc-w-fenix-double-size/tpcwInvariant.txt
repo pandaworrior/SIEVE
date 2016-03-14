@@ -1,0 +1,1 @@
+(ALL j v. (j, v) : itemTable..itemTable_contents --> v..itemRecord_i_stock..ndi_value >= 0)

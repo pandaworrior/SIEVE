@@ -1,0 +1,65 @@
+Task  ----->  status
+
+static part
+
+Step 1: start project ---------> Done
+Step 2: write a build xml file ---------> Done
+Step 3: finish tree implementation ----------> Done
+Step 4: finish project parser architecture --------> Done
+Step 5: finish the control flow graph node implementation -------> Done
+Step 6: finish the control flow graph implementation ------> Done
+Step 7: obtain control flow graph for each method (without binding) -----> Done
+Step 8: bind method invocations to their declarations
+	* not care about methods presented in library -----> Done
+	* binding should distinguish local methods, methods defined in other files -----> Done
+	* One thing missing is that to use list of arguments to search method with duplicated names
+Step 9: obtain regular expression -------> Done
+	* simplify the regular expression -------> Done
+Step 10: obtain reduced regular expression ---------> Done
+Step 11: change the CRDT lib ------> Done
+Step 12: obtain the static transformed template ----> Done
+    * Write a ast node to a file ----> Done
+    * Generate all data structures required for static template -----> Done
+    * Generate shadow template ----> Done
+Step 13: compute weakest precondition
+Step 14: test with real applications
+	* test the control flow analysis with tpc-w-fenix --> Done
+		* replace @@ with the actual sql statement --> Done
+	* test shadow operation template transformation with tpc-w-fenix --> Done
+	   * have to change the interval things --> Done
+Step 15: the results done
+
+runtime part
+
+Step 1: reuse CRDT Lib ---> Done
+Step 2: modified JDBC Driver ----> Done
+Step 3: runtime weakest precondition checking ----> Done
+Step 4: integrated with txstore --> Done
+Step 5: test everything with TPCW --> Done
+Step 6: test everything with RUBiS --> Close to be done
+Step 7: run experiments and analyze results
+
+Together:
+Step 1: compute signatures ----> Done
+Step 2: define the format the static output ---->Done
+Step 3: check the nested for and while with continue and break at each nested level
+Step 4: modify the scripts to launch experiments -----> Done
+
+
+Discussion part
+June 18: 
+  Step 1: Write an outline draft with slightly detailed evaluation -----> Done
+    * What to evaluate? -----> Done
+    * Performance numbers of static analysis -----> Done
+    * Overhead of running time logic -----> Done
+    * Replication benefits ------> Done
+  Step 2: Send an email out to call a meeting next week -----> Done
+    * Agenda 1: status updates -----> Done
+    * Agenda 2: writing plan -----> Done
+    * Agenda 3: evaluation plan -----> Done
+    * Agenda 4: something else -----> Done
+    
+June 26:
+  Step 1: look at asplos papers
+  Step 2: change evaluation
+  Step 2: write section 3 and 4

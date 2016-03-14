@@ -1,0 +1,526 @@
+<?xml version="1.0"?>
+<project name="georeplication" default="main" basedir=".">
+  <!-- Sets variables which can later be used. -->
+  <!-- The value of a property is accessed via ${} -->
+  <property name="src.dir" location="src" />
+  <property name="build.dir" location="bin" />
+  <property name="dist.dir" location="dist" />
+  <property name="docs.dir" location="docs" />
+  <property name="exec.dir" location="dist/exec"/>
+  <property name="lib.dir" location="lib" />
+  <property name="projectjar.name" value = "georeplication.jar"/>
+	<property name="projectalljar.name" value = "georeplication-all.jar"/>
+	
+  <property name="one-jar.dist.dir" value="/home/chengli/ant-one-jar"/>
+  <import file="${one-jar.dist.dir}/one-jar-ant-task.xml" optional="true" /> 
+	
+	<!-- Deletes the existing build, docs and dist directory-->
+	  <target name="clean">
+	  	<delete dir="${build.dir}/classes"/>
+	  	<delete dir="${build.dir}/lib"/>
+	    <delete dir="${build.dir}" />
+	    <delete dir="${docs.dir}" />
+	    <delete dir="${dist.dir}" />
+	  </target>
+
+	  <!-- Creates the  build, docs and dist directory-->
+	  <target name="makedir">
+	    <mkdir dir="${build.dir}" />
+	  	<mkdir dir="${build.dir}/classes" />
+	  	<mkdir dir="${build.dir}/lib" />
+	    <mkdir dir="${docs.dir}" />
+	    <mkdir dir="${dist.dir}" />
+	  	<mkdir dir="${exec.dir}"/>
+	  </target>
+
+	  <!-- Compiles the java code (including the usage of library for JUnit -->
+	  <target name="compile" depends="clean, makedir">
+	    <javac includeantruntime="false" srcdir="${src.dir}" destdir="${build.dir}/classes">
+	    	<classpath>
+	    		     <pathelement path="${classpath}"/>
+	    		      	<fileset dir="${lib.dir}">
+	    		      	  <include name="**/javaparser-1.0.8.jar"/>
+	    		      	  <include name="**/commons-io-2.4.jar"/>
+	    		      	  <include name="**/jsqlparser.jar"/>
+	    		      	  <include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+	    		      	  <include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+	    		      	  <include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+	    		      	  <include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+	    		      	  <include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+	    		      	  <include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+	    		      	  <include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+	    		      	  <include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+	    		      	  <include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+	    		      	  <include name="**/org.osgi.core-4.2.0.jar"/>
+	    		      	  <include name="**/osgi-service.jar"/>
+	    		      	  <include name = "**/netty-3.2.1.Final.jar"/>
+	    		      		<include name = "**/mysql-connector-java-5.1.17-bin.jar"/>
+	    		      		<include name = "**/com.sun.rowset.jar"/>
+	    		      	</fileset> 
+	    		</classpath>
+		       	<exclude name = "**/util/crdtlib/verifieddatatypes/**"/>
+		       	<exclude name = "**/test/util/annotationparser/sqlSchemaTest.sql"/>
+		       	<exclude name = "**/test/runtimelogic/shadowoperationcreator/sqlSchemaDeltaTest.sql"/>
+		       	<exclude name = "**/test/runtimelogic/shadowoperationcreator/sqlSchemaDeltaTestOrig.sql"/>
+		       	<exclude name = "**/test/runtimelogic/shadowoperationcreator/sqlSchemaTest.sql"/>
+	    </javac>
+
+	  </target>
+
+	  <!-- Creates Javadoc -->
+	  <target name="docs" depends="compile">
+	    <javadoc packagenames="src" sourcepath="${src.dir}" destdir="${docs.dir}">
+	      <!-- Define which files / directory should get included, we include all -->
+	       <fileset dir="${src.dir}">
+	            <include name="**" />
+	       		<exclude name = "**/util/crdtlib/verifieddatatypes/**"/>
+	       		<exclude name ="**/test/util/annotationparser/sqlSchemaTest.sql"/>
+	       		<exclude name ="**/test/runtimelogic/shadowoperationcreator/sqlSchemaDeltaTest.sql"/>
+	       		<exclude name ="**/test/runtimelogic/shadowoperationcreator/sqlSchemaDeltaTestOrig.sql"/>
+	       		<exclude name ="**/test/runtimelogic/shadowoperationcreator/sqlSchemaTest.sql"/>
+	       </fileset>
+	       <classpath>
+	       	<pathelement path="${classpath}"/>
+	    		<fileset dir="${lib.dir}">
+	    			<include name="**/javaparser-1.0.8.jar"/>
+	    			<include name="**/commons-io-2.4.jar"/>
+	  	      	  	<include name="**/jsqlparser.jar"/>
+	  	      	  	<include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+	  	      	  	<include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+	  	      	  	<include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+	  	      	  	<include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+	  	      	  	<include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+	  	      	  	<include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+	  	      	  	<include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+	  	      	  	<include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+	  	      	  	<include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+	  	      	  	<include name="**/org.osgi.core-4.2.0.jar"/>
+	  	      	  	<include name="**/osgi-service.jar"/>
+	    		     <include name = "**/netty-3.2.1.Final.jar"/>
+	    			  <include name = "**/mysql-connector-java-5.1.17-bin.jar"/>
+	    		    <include name = "**/com.sun.rowset.jar"/>
+	    		</fileset> 
+	    	</classpath>
+	    </javadoc>
+	  </target>
+
+	  <!--Creates the deployable jar file  -->
+	  <target name="jar" depends="compile">
+	  	<jar destfile="${build.dir}/lib/${projectjar.name}" basedir="${build.dir}/classes">
+	  	</jar>
+	    <jar destfile="${dist.dir}\javafileparsertest.jar" basedir="${build.dir}/classes">
+	      <manifest>
+	        <attribute name="Main-Class" value="test.staticanalysis.codeparser.JavaFileParserTest" />
+	      </manifest>
+	    </jar>
+	    <jar destfile="${dist.dir}\projectparsertest.jar" basedir="${build.dir}/classes">
+	      <manifest>
+	        <attribute name="Main-Class" value="test.staticanalysis.codeparser.ProjectParserTest" />
+	      </manifest>
+	    </jar>
+	    <jar destfile="${dist.dir}\sqlmaterializertest.jar" basedir="${build.dir}/classes">
+	      <manifest>
+	        <attribute name="Main-Class" value="test.staticanalysis.codeparser.MaterializeJavaFileTest" />
+	      </manifest>
+	    </jar>
+	    <jar destfile="${dist.dir}\projectparsertpcw.jar" basedir="${build.dir}/classes">
+	      <manifest>
+	        <attribute name="Main-Class" value="test.applications.ProjectParserTPCW" />
+	      </manifest>
+	    </jar>
+        <jar destfile="${dist.dir}\projectparserrubis.jar" basedir="${build.dir}/classes">
+          <manifest>
+            <attribute name="Main-Class" value="test.applications.ProjectParserRUBiS" />
+          </manifest>
+        </jar>
+	    <jar destfile="${dist.dir}\templatecreatortpcw.jar" basedir="${build.dir}/classes">
+	      <manifest>
+	        <attribute name="Main-Class" value="test.applications.TPCWTemplateCreator" />
+	      </manifest>
+	    </jar>
+        <jar destfile="${dist.dir}\templatecreatorrubis.jar" basedir="${build.dir}/classes">
+          <manifest>
+            <attribute name="Main-Class" value="test.applications.RUBiSTemplateCreator" />
+          </manifest>
+        </jar>
+        <jar destfile="${dist.dir}\dbclasscreatortpcw.jar" basedir="${build.dir}/classes">
+          <manifest>
+            <attribute name="Main-Class" value="test.applications.TPCWDatabaseClassCreator" />
+          </manifest>
+        </jar>
+        <jar destfile="${dist.dir}\dbclasscreatorrubis.jar" basedir="${build.dir}/classes">
+          <manifest>
+            <attribute name="Main-Class" value="test.applications.RUBiSDatabaseClassCreator" />
+          </manifest>
+        </jar>
+	  	<jar destfile="${dist.dir}\controlflowgraphtest.jar" basedir="${build.dir}/classes">
+	  	  <manifest>
+	  		<attribute name="Main-Class" value="test.staticanalysis.datastructures.controlflowgraph.ControlFlowGraphTest" />
+	  	  </manifest>
+	    </jar>
+	  	<jar destfile="${dist.dir}\shdoptest.jar" basedir="${build.dir}/classes">
+	  		  	  <manifest>
+	  		  		<attribute name="Main-Class" value="test.staticanalysis.datastructures.shadowoperation.ShadowOpTemplateTest" />
+	  		  	  </manifest>
+	  		    </jar>
+	  	<jar destfile="${dist.dir}\simpleexpeval.jar" basedir="${build.dir}/classes">
+	  		  	  <manifest>
+	  		  		<attribute name="Main-Class" value="test.runtimelogic.weakestpreconditionchecker.SimpleExpressionEvaluatorTest" />
+	  		  	  </manifest>
+	  		    </jar>
+    <jar destfile="${dist.dir}\wpchecker.jar" basedir="${build.dir}/classes">
+                 <manifest>
+                   <attribute name="Main-Class" value="test.runtimelogic.weakestpreconditionchecker.WPChecker" />
+                 </manifest>
+               </jar>
+	  	<jar destfile="${dist.dir}\pathanalyzertest.jar" basedir="${build.dir}/classes">
+	  		  	  <manifest>
+	  		  		<attribute name="Main-Class" value="test.staticanalysis.pathanalyzer.PathAnalyzerTest" />
+	  		  	  </manifest>
+	  		    </jar>
+	  	<jar destfile="${dist.dir}\dbclasscreatortest.jar" basedir="${build.dir}/classes">
+	  		  	  <manifest>
+	  		  		<attribute name="Main-Class" value="test.staticanalysis.templatecreator.DatabaseClassCreatorTest" />
+	  		  	  </manifest>
+	  		    </jar>
+	  	<jar destfile="${dist.dir}\templatecreatortest.jar" basedir="${build.dir}/classes">
+	  		  	  <manifest>
+	  		  		<attribute name="Main-Class" value="test.staticanalysis.templatecreator.TemplateCreatorTest" />
+	  		  	  </manifest>
+	  		    </jar>
+	  	<jar destfile="${dist.dir}\annotationparsertest.jar" basedir="${build.dir}/classes">
+	  		  	  <manifest>
+	  		  		<attribute name="Main-Class" value="test.util.annotationparser.AnnotationParserTest" />
+	  		  	  </manifest>
+	  		    </jar>
+        <jar jarfile="${dist.dir}\coordinator.jar" basedir="${build.dir}/classes">
+            <manifest>
+                <attribute name="Main-Class" value="replicationlayer.core.txstore.coordinator.NewCoordinator" />
+            </manifest>
+        </jar>
+	  	<jar jarfile="${dist.dir}\storageshim.jar" basedir="${build.dir}/classes">
+	  	            <manifest>
+	  	                <attribute name="Main-Class" value="replicationlayer.appextend.MicroStorage" />
+	  	            </manifest>
+	  	        </jar>
+        <jar jarfile="${dist.dir}\preloadDB.jar" basedir="${build.dir}/classes">
+                    <manifest>
+                        <attribute name="Main-Class" value="util.commonfunc.PreloadDB" />
+                    </manifest>
+                </jar>
+	  </target>
+	
+	  <!-- Construct the One-JAR file -->   
+	  <target name="onejar" depends="jar">
+	       <one-jar destfile="${build.dir}/lib/${projectalljar.name}">
+	        <main jar="${build.dir}/lib/${projectjar.name}"/>
+	        <lib>
+	            <fileset dir="${lib.dir}">
+                    <include name="**/javaparser-1.0.8.jar"/>
+                    <include name="**/commons-io-2.4.jar"/>
+                    <include name="**/jsqlparser.jar"/>
+                    <include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+                    <include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+                    <include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+                    <include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+                    <include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+                    <include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+                    <include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+                    <include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+                    <include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+                    <include name="**/org.osgi.core-4.2.0.jar"/>
+                    <include name="**/osgi-service.jar"/>
+                <include name = "**/netty-3.2.1.Final.jar"/>
+                <include name = "**/mysql-connector-java-5.1.17-bin.jar"/>
+	            	   <include name = "**/com.sun.rowset.jar"/>
+	            </fileset>
+	        </lib>
+	       </one-jar>
+	   <one-jar destfile="${exec.dir}/javafileparsertest-big.jar">
+	   	<main jar="${dist.dir}/javafileparsertest.jar"/>
+	    <lib>
+	   		<fileset dir="${lib.dir}">
+	   			<include name="javaparser-1.0.8.jar"/>
+	   			<include name="**/commons-io-2.4.jar"/>
+	   	    </fileset>
+	    </lib>
+	   </one-jar>
+	   <one-jar destfile="${exec.dir}/projectparsertest-big.jar">
+		<main jar="${dist.dir}/projectparsertest.jar"/>
+		<lib>
+		    <fileset dir="${lib.dir}">
+		   		<include name="javaparser-1.0.8.jar"/>
+		   		<include name="**/commons-io-2.4.jar"/>
+		   	</fileset>
+		</lib>
+	   </one-jar>
+		   <one-jar destfile="${exec.dir}/sqlmaterializertest-big.jar">
+			<main jar="${dist.dir}/sqlmaterializer.jar"/>
+			<lib>
+			    <fileset dir="${lib.dir}">
+			   		<include name="javaparser-1.0.8.jar"/>
+			   		<include name="**/commons-io-2.4.jar"/>
+			   	</fileset>
+			</lib>
+		   </one-jar>
+		  <one-jar destfile="${exec.dir}/projectparsertpcw-big.jar">
+			<main jar="${dist.dir}/projectparsertpcw.jar"/>
+			<lib>
+			    <fileset dir="${lib.dir}">
+			    	    <include name="javaparser-1.0.8.jar"/>
+	                        <include name="**/commons-io-2.4.jar"/>
+	                        <include name="**/jsqlparser.jar"/>
+	                        <include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+	                        <include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+	                        <include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+	                        <include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+	                        <include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+	                        <include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+	                        <include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+	                        <include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+	                        <include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+	                        <include name="**/org.osgi.core-4.2.0.jar"/>
+	                        <include name="**/osgi-service.jar"/>
+			   	</fileset>
+			</lib>
+		   </one-jar>
+	  	<one-jar destfile="${exec.dir}/projectparserrubis-big.jar">
+	  	            <main jar="${dist.dir}/projectparserrubis.jar"/>
+	  	            <lib>
+	  	                <fileset dir="${lib.dir}">
+	  	                 <include name="javaparser-1.0.8.jar"/>
+	                    <include name="**/commons-io-2.4.jar"/>
+	                    <include name="**/jsqlparser.jar"/>
+	                    <include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+	                    <include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+	                    <include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+	                    <include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+	                    <include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+	                    <include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+	                    <include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+	                    <include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+	                    <include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+	                    <include name="**/org.osgi.core-4.2.0.jar"/>
+	                    <include name="**/osgi-service.jar"/>
+	  	                </fileset>
+	  	            </lib>
+	  	           </one-jar>
+		  <one-jar destfile="${exec.dir}/templatecreatortpcw-big.jar">
+			<main jar="${dist.dir}/templatecreatortpcw.jar"/>
+			<lib>
+			    <fileset dir="${lib.dir}">
+			   		<include name="javaparser-1.0.8.jar"/>
+			   		<include name="**/commons-io-2.4.jar"/>
+			    	<include name="**/jsqlparser.jar"/>
+			    	<include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+	                <include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+	                <include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+	                <include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+	                <include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+	                <include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+	                <include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+	                <include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+	                <include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+	                <include name="**/org.osgi.core-4.2.0.jar"/>
+	                <include name="**/osgi-service.jar"/>
+			   	</fileset>
+			</lib>
+		   </one-jar>
+	<one-jar destfile="${exec.dir}/templatecreatorrubis-big.jar">
+	            <main jar="${dist.dir}/templatecreatorrubis.jar"/>
+	            <lib>
+	                <fileset dir="${lib.dir}">
+	                    <include name="javaparser-1.0.8.jar"/>
+	                    <include name="**/commons-io-2.4.jar"/>
+	                    <include name="**/jsqlparser.jar"/>
+	                    <include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+	                    <include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+	                    <include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+	                    <include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+	                    <include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+	                    <include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+	                    <include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+	                    <include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+	                    <include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+	                    <include name="**/org.osgi.core-4.2.0.jar"/>
+	                    <include name="**/osgi-service.jar"/>
+	                </fileset>
+	            </lib>
+	           </one-jar>
+	<one-jar destfile="${exec.dir}/dbclasscreatortpcw-big.jar">
+	            <main jar="${dist.dir}/dbclasscreatortpcw.jar"/>
+	            <lib>
+	                <fileset dir="${lib.dir}">
+	                    <include name="javaparser-1.0.8.jar"/>
+	                    <include name="**/commons-io-2.4.jar"/>
+	                    <include name="**/jsqlparser.jar"/>
+	                    <include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+	                    <include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+	                    <include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+	                    <include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+	                    <include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+	                    <include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+	                    <include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+	                    <include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+	                    <include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+	                    <include name="**/org.osgi.core-4.2.0.jar"/>
+	                    <include name="**/osgi-service.jar"/>
+	                </fileset>
+	            </lib>
+	           </one-jar>
+	  	
+	  	<one-jar destfile="${exec.dir}/dbclasscreatorrubis-big.jar">
+	  	                <main jar="${dist.dir}/dbclasscreatorrubis.jar"/>
+	  	                <lib>
+	  	                    <fileset dir="${lib.dir}">
+	  	                        <include name="javaparser-1.0.8.jar"/>
+	  	                        <include name="**/commons-io-2.4.jar"/>
+	  	                        <include name="**/jsqlparser.jar"/>
+	  	                        <include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+	  	                        <include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+	  	                        <include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+	  	                        <include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+	  	                        <include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+	  	                        <include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+	  	                        <include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+	  	                        <include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+	  	                        <include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+	  	                        <include name="**/org.osgi.core-4.2.0.jar"/>
+	  	                        <include name="**/osgi-service.jar"/>
+	  	                    </fileset>
+	  	                </lib>
+	  	               </one-jar>
+	   <one-jar destfile="${exec.dir}/controlflowgraphtest-big.jar">
+		<main jar="${dist.dir}/controlflowgraphtest.jar"/>
+		<lib>
+			<fileset dir="${lib.dir}">
+			    <include name="javaparser-1.0.8.jar"/>
+			   	<include name="**/commons-io-2.4.jar"/>
+			</fileset>
+		</lib>
+	   </one-jar>
+	  	 <one-jar destfile="${exec.dir}/shdoptest-big.jar">
+	  			<main jar="${dist.dir}/shdoptest.jar"/>
+	  			<lib>
+	  				<fileset dir="${lib.dir}">
+	  				    <include name="javaparser-1.0.8.jar"/>
+	  				   	<include name="**/commons-io-2.4.jar"/>
+	  				</fileset>
+	  			</lib>
+	  		   </one-jar>
+	  	 <one-jar destfile="${exec.dir}/simpleexpeval-big.jar">
+	  			<main jar="${dist.dir}/simpleexpeval.jar"/>
+	  			<lib>
+	  				<fileset dir="${lib.dir}">
+	  				    <include name="javaparser-1.0.8.jar"/>
+	  				   	<include name="**/commons-io-2.4.jar"/>
+	  				</fileset>
+	  			</lib>
+	  		   </one-jar>
+        <one-jar destfile="${exec.dir}/wpchecker-big.jar">
+               <main jar="${dist.dir}/wpchecker.jar"/>
+               <lib>
+                   <fileset dir="${lib.dir}">
+                       <include name="javaparser-1.0.8.jar"/>
+                       <include name="**/commons-io-2.4.jar"/>
+                   </fileset>
+               </lib>
+              </one-jar>
+	   <one-jar destfile="${exec.dir}/pathanalyzertest-big.jar">
+	  	<main jar="${dist.dir}/pathanalyzertest.jar"/>
+	  	 <lib>
+	  		<fileset dir="${lib.dir}">
+	  		    <include name="javaparser-1.0.8.jar"/>
+	  		    <include name="**/commons-io-2.4.jar"/>
+	  		</fileset>
+	  	</lib>
+	   </one-jar>
+		   <one-jar destfile="${exec.dir}/dbclasscreatortest-big.jar">
+		  	<main jar="${dist.dir}/dbclasscreatortest.jar"/>
+		  	 <lib>
+		  		<fileset dir="${lib.dir}">
+		  		    <include name="javaparser-1.0.8.jar"/>
+		  		    <include name="**/commons-io-2.4.jar"/>
+		  			<include name="**/jsqlparser.jar"/>
+			      	<include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+			      	<include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+			      	<include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+			      	<include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+			      	<include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+			      	<include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+			      	<include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+			      	<include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+			      	<include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+			      	<include name="**/org.osgi.core-4.2.0.jar"/>
+			      	<include name="**/osgi-service.jar"/>
+		  		</fileset>
+		  	</lib>
+		   </one-jar>
+			   <one-jar destfile="${exec.dir}/templatecreatortest-big.jar">
+			  	<main jar="${dist.dir}/templatecreatortest.jar"/>
+			  	 <lib>
+			  		<fileset dir="${lib.dir}">
+			  		    <include name="javaparser-1.0.8.jar"/>
+			  		    <include name="**/commons-io-2.4.jar"/>
+			  			<include name="**/jsqlparser.jar"/>
+				      	<include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+				      	<include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+				      	<include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+				      	<include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+				      	<include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+				      	<include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+				      	<include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+				      	<include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+				      	<include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+				      	<include name="**/org.osgi.core-4.2.0.jar"/>
+				      	<include name="**/osgi-service.jar"/>
+			  		</fileset>
+			  	</lib>
+			   </one-jar>
+		   <one-jar destfile="${exec.dir}/annotationparsertest-big.jar">
+		  	<main jar="${dist.dir}/annotationparsertest.jar"/>
+		  	 <lib>
+		  		<fileset dir="${lib.dir}">
+		  		    <include name="javaparser-1.0.8.jar"/>
+		  		    <include name="**/commons-io-2.4.jar"/>
+		  			<include name="**/jsqlparser.jar"/>
+		  		</fileset>
+		  	</lib>
+		   </one-jar>
+    <one-jar destfile="${exec.dir}/coordinator-big.jar">
+         <main jar="${dist.dir}/coordinator.jar" />
+         <lib>
+             <fileset dir="lib">
+                 <include name="netty-3.2.1.Final.jar" />
+                 <include name="log4j-1.2.15.jar" />
+             </fileset>
+         </lib>
+     </one-jar>
+        <one-jar destfile="${exec.dir}/storageshim-big.jar">
+            <main jar="${dist.dir}/storageshim.jar" />
+            <lib>
+                <fileset dir="lib">
+                    <include name="netty-3.2.1.Final.jar" />
+                    <include name="log4j-1.2.15.jar" />
+                    <include name="jsqlparser.jar" />
+                    <include name="mysql-connector-java-5.1.17-bin.jar" />
+                </fileset>
+            </lib>
+        </one-jar>
+	
+	    <one-jar destfile="${exec.dir}/preloadDB-big.jar">
+	            <main jar="${dist.dir}/preloadDB.jar" />
+	            <lib>
+	                <fileset dir="lib">
+	                    <include name="mysql-connector-java-5.1.17-bin.jar" />
+	                </fileset>
+	            </lib>
+	        </one-jar>
+      </target>
+	   	
+	  <!--target name="main" depends="compile, jar, onejar, docs"-->
+	  	 <target name="main" depends="compile, jar, onejar">
+	    <description>Main target</description>
+	  </target>
+	
+</project>
