@@ -33,7 +33,7 @@ public class ProjectParserTest {
 	 */
 	public static void main(String[] args) throws Exception {
 		// creates an project parser for the tree
-		String filePath = "/var/tmp/workspace/georeplication/src/test/staticanalysis/codeparser/exampleproject";
+		String filePath = args[0];//"/var/tmp/workspace/georeplication/src/test/staticanalysis/codeparser/exampleproject";
 		ProjectParser pjsParser = new ProjectParser(filePath,
 				"CrdtJDBCDriver");
 		pjsParser.buildFileTree();

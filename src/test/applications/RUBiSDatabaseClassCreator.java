@@ -32,7 +32,12 @@ public class RUBiSDatabaseClassCreator {
 	 */
 	public static void main(String[] args){
 		
-		String fileName = "/var/tmp/workspace/georeplication/applications/RUBiS/database/rubis_sieve.sql";
+		if(args.length != 1)
+		{
+			System.exit(-1);
+		}
+
+		String fileName = args[0];//"/var/tmp/workspace/georeplication/applications/RUBiS/database/rubis_sieve.sql";
 		SchemaParser sP = new SchemaParser(fileName);
 		sP.parseAnnotations();
 		sP.printOut();

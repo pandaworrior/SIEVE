@@ -11,7 +11,7 @@
   <property name="projectjar.name" value = "georeplication.jar"/>
 	<property name="projectalljar.name" value = "georeplication-all.jar"/>
 	
-  <property name="one-jar.dist.dir" value="/home/chengli/ant-one-jar"/>
+	<property name="one-jar.dist.dir" value="/home/cheng/Code/Shared/"/>
   <import file="${one-jar.dist.dir}/one-jar-ant-task.xml" optional="true" /> 
 	
 	<!-- Deletes the existing build, docs and dist directory-->
