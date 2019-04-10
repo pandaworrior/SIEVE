@@ -3,7 +3,11 @@
  */
 package staticanalysis.z3codegen;
 
+import java.util.List;
+
 import util.annotationparser.SchemaParser;
+import util.crdtlib.dbannotationtypes.dbutil.DataField;
+import util.crdtlib.dbannotationtypes.dbutil.DatabaseTable;
 
 /**
  * This class is used to statically analyze web applications written in Java and
@@ -32,9 +36,59 @@ public class CodeGenerator {
 	}
 	
 	private void codeGenForDBSchema() {
-		//TODO complete first
 		this.fWritter.appendToFile(customizedLineSeparator);
+		
+		// ID 
+		this.fWritter.appendToFile("ID = IntSort()\n");
+		
+		// parse the schema
+		this.parseDBSchema();
+		
 		// code related to tables and records
+		List<DatabaseTable> tabList = this.dbSchemaParser.getAllTableInstances();
+		for(int i = 0; i < tabList.size(); i++) {
+			DatabaseTable tab = tabList.get(i);
+			this.fWritter.appendToFile(this.codeGenForRecord(tab));
+		}
+	}
+	
+	private String codeGenForRecord(DatabaseTable tabIns) {
+		String recordStr = tabIns.get_Table_Name() + " = Datatype(\'"+tabIns.get_Table_Name()+"\')" ;
+		// Iterate all attributes
+		List<DataField> dfList = tabIns.getDataFieldList();
+		recordStr += "\n" + tabIns.get_Table_Name()+".declare(\'new\',";
+		for(int i = 0; i < dfList.size(); i++)
+		{
+			DataField df = dfList.get(i);
+			if(df.is_Primary_Key()) {
+				continue;
+			}
+			recordStr += "(\'" + df.get_Data_Field_Name() + "\', ";
+			// TODO: check how to handle timestamp
+			if(df.get_Data_Type().contentEquals("INTEGER") || 
+					df.get_Data_Type().contentEquals("INT") || 
+					df.get_Data_Type().contentEquals("BIGINT") || 
+					df.get_Data_Type().contentEquals("TIMESTAMP") ||
+					df.get_Data_Type().contentEquals("DATE")) {
+				recordStr += "IntSort()),";
+			}else if(df.get_Data_Type().contentEquals("VARCHAR") ||
+					df.get_Data_Type().contentEquals("TEXT")) {
+				recordStr += "StringSort()),";
+			}else if(df.get_Data_Type().contentEquals("FLOAT")) {
+				recordStr += "RealSort()),";
+			}else {
+				System.out.println("Undefined data type " + df.get_Data_Type());
+				System.exit(-1);
+			}
+		}
+		
+		// replace the last comma with )
+		if(recordStr.endsWith(","))
+		{
+		  recordStr = recordStr.substring(0,recordStr.length() - 1) + ")";
+		}
+		recordStr += "\n" + tabIns.get_Table_Name() + " = "+tabIns.get_Table_Name()+".create()\n" ;
+		return recordStr;
 	}
 	
 	private void codeGenForQueries() {
@@ -83,7 +137,6 @@ public class CodeGenerator {
 		
 		CodeGenerator cGen = new CodeGenerator(projectName, dbSchemaFile);
 		cGen.codeGenForHeader();
-		cGen.parseDBSchema();
 		cGen.codeGenForDBSchema();
 		cGen.codeGenForQueries();
 		cGen.codeGenForInvariant();

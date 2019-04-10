@@ -273,7 +273,7 @@ public class CreateStatementParser {
 	public static Vector<String> get_ConstraintStrs(String[] declarationStrs) {
 		Vector<String> constraintStrs = new Vector<String>();
 		for (int i = 0; i < declarationStrs.length; i++) {
-			if (declarationStrs[i].toUpperCase().startsWith("PRIMARY KEY")
+			if (declarationStrs[i].toUpperCase().contains("PRIMARY KEY")
 					|| declarationStrs[i].toUpperCase().contains("FOREIGN KEY")) {
 				constraintStrs.add(declarationStrs[i]);
 			}
