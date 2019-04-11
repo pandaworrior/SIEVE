@@ -5,6 +5,7 @@ package staticanalysis.z3codegen;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import net.sf.jsqlparser.JSQLParserException;
@@ -51,6 +52,8 @@ public class SqlQuery {
 	static String oldPrefix = "o_";
 	
 	static String newPrefix = "n_";
+	
+	static String parameterSuffix = "_p";
 	
 	private void setNameAndQuery(String sStr) {
 		
@@ -122,7 +125,7 @@ public class SqlQuery {
 				SelectItem sIt = selItems.get(i);
 				DataField dF = dbSchemaParser.getTableByName(tableName).get_Data_Field(sIt.toString());
 				fieldsStr += CodeGenerator.indentStr + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
-				fieldsStr += " = " + tableName + "." + dF.get_Data_Field_Name() + "(" + "rec_" + tableName + ")\n";
+				fieldsStr += " = " + tableName + "." + dF.get_Data_Field_Name() + "(" + recordPrefix + tableName + ")\n";
 				returnStr += fieldPrefix + recordPrefix + dF.get_Data_Field_Name() + ", ";
 			}
 			if(returnStr.endsWith(", "))
@@ -143,9 +146,72 @@ public class SqlQuery {
 		return codeStr;
 	}
 	
-	private String codeGenForUpdate(Update updStmt)
+	private String codeGenForUpdate(Update updateStmt)
 	{
-		String codeStr = "";
+		String codeStr = "def " + this.sqlName + "(m, ";
+		String tableName = updateStmt.getTable().getName();
+		
+		// function def
+		codeStr += this.getPrimaryKeyList(tableName) + ", ";
+		
+		// create a list of parameters
+		List<String> colList = new ArrayList<String>();
+		List<String> valList = new ArrayList<String>();
+		Iterator colIt = updateStmt.getColumns().iterator();
+		while(colIt.hasNext()){
+			String colName = colIt.next().toString();
+			colList.add(colName);
+			codeStr += colName + parameterSuffix + ", ";
+		}
+		if(codeStr.endsWith(", "))
+		{
+			codeStr = codeStr.substring(0, codeStr.length() - 2) + "): \n";
+		}
+		
+		// get the old record
+		String oldStr = CodeGenerator.indentStr + oldPrefix + recordPrefix + tableName + " = Select(m, ";
+		oldStr += this.getPrimaryKeyList(tableName) + ")\n";
+		
+		codeStr += oldStr;
+		
+		Iterator valueIt = updateStmt.getExpressions().iterator();
+		while(valueIt.hasNext()){
+			valList.add(valueIt.next().toString());
+		}
+		
+		for(int i = 0; i < colList.size(); i++) {
+			DataField dF = dbSchemaParser.getTableByName(tableName).get_Data_Field(colList.get(i));
+			String oldFieldStr = CodeGenerator.indentStr + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+			oldFieldStr += " = " + tableName + "." + dF.get_Data_Field_Name() + "(" + recordPrefix + tableName + ")\n";
+			String newFieldStr = CodeGenerator.indentStr + newPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+			
+			String valStr = valList.get(i);
+			if(valStr.contains("+"))
+			{
+				newFieldStr += " = " + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+				newFieldStr += " + " + dF.get_Data_Field_Name() + parameterSuffix + "\n";
+			}else if(valStr.contains("-")) {
+				newFieldStr += " = " + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+				newFieldStr += " - " + dF.get_Data_Field_Name() + parameterSuffix + "\n";
+			}else {
+				newFieldStr += " = " + dF.get_Data_Field_Name() + parameterSuffix + "\n";
+			}
+			codeStr += oldFieldStr;
+			codeStr += newFieldStr;
+		}
+		
+		// store the new record
+		String newStr = CodeGenerator.indentStr + newPrefix + recordPrefix + tableName + " = " + tableName + ".new(";
+		for(int i = 0; i < colList.size(); i++)
+		{
+			newStr += newPrefix + fieldPrefix + recordPrefix + colList.get(i) + ", ";
+		}
+		if(newStr.endsWith(", ")) {
+			newStr = newStr.substring(0, newStr.length() - 2) + ")\n";
+		}
+		
+		newStr += CodeGenerator.indentStr + "return Store(m, " + newPrefix + recordPrefix + tableName + ")\n";
+		codeStr += newStr;
 		return codeStr;
 	}
 	
@@ -154,14 +220,6 @@ public class SqlQuery {
 		String codeStr = "";
 		return codeStr;
 	}
-	
-	// first get the primary input, select from it
-	
-	// if select, get attributes
-	
-	// if update, get old attributes
-	
-	// if number, get the delta
 	
 	public String codeGenForQuery() {
 		String codeStr = "";
