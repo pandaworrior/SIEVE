@@ -23,6 +23,8 @@ public class CodeGenerator {
 	/** The DB Query Parser. */
 	private QueryParser qryParser;
 	
+	private Project pj;
+	
 	private FileWritter fWritter;
 	
 	static int sequencer = 0;
@@ -147,6 +149,16 @@ public class CodeGenerator {
 	private void codeGenForTransactions() {
 		// code related to all shadow operations and their
 		this.fWritter.appendToFile(customizedLineSeparator);
+		
+		// get list of transactions
+		List<AppTransaction> txnList = this.pj.getTxnList();
+		
+		for(int i = 0; i < txnList.size(); i++)
+		{
+			AppTransaction appT = txnList.get(i);
+			String codeStr = appT.codeGenForTransaction();
+			this.fWritter.appendToFile(codeStr);
+		}
 	}
 	
 	private void codeGenForFoot() {
@@ -158,10 +170,11 @@ public class CodeGenerator {
 	 * 
 	 * @param dbSchemaFile Database Schema File
 	 */
-	public CodeGenerator(String projectName, String dbSchemaFile, String qryFile) {
+	public CodeGenerator(String projectName, String dbSchemaFile, String qryFile, String projectPath) {
 		this.fWritter = new FileWritter(projectName);
 		this.dbSchemaParser = new SchemaParser(dbSchemaFile);
 		this.qryParser = new QueryParser(this.dbSchemaParser, qryFile);
+		this.pj = new Project();
 	}
 
 	/**
@@ -170,17 +183,18 @@ public class CodeGenerator {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		if(args.length != 3)
+		if(args.length != 4)
 		{
-			System.out.println("[Correct Usage:] java -jar codeGen-big.jar projectName dbSchema qryFile");
+			System.out.println("[Correct Usage:] java -jar codeGen-big.jar projectName dbSchema qryFile pjPath");
 			System.exit(-1);
 		}
 		
 		String projectName = args[0];
 		String dbSchemaFile = args[1];
 		String qFile = args[2];
+		String pjPath = args[3];
 		
-		CodeGenerator cGen = new CodeGenerator(projectName, dbSchemaFile, qFile);
+		CodeGenerator cGen = new CodeGenerator(projectName, dbSchemaFile, qFile, pjPath);
 		cGen.codeGenForHeader();
 		cGen.codeGenForDBSchema();
 		cGen.codeGenForQueries();
