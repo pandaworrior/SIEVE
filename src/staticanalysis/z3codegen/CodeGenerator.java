@@ -20,11 +20,23 @@ public class CodeGenerator {
 	/** The DB Schema Parser. */
 	private SchemaParser dbSchemaParser;
 	
+	/** The DB Query Parser. */
+	private QueryParser qryParser;
+	
 	private FileWritter fWritter;
+	
+	static int sequencer = 0;
+	
+	static String tablePrefix = "tab";
+	
+	static String indentStr = "    ";
 	
 	static String customizedLineSeparator = "\n##############################################"
 			                                 +"################################################\n";
 	
+	private int getNextSequence() {
+		return sequencer++;
+	}
 	
 	private void parseDBSchema() {
 		this.dbSchemaParser.parseAnnotations();
@@ -50,6 +62,28 @@ public class CodeGenerator {
 			DatabaseTable tab = tabList.get(i);
 			this.fWritter.appendToFile(this.codeGenForRecord(tab));
 		}
+		this.fWritter.appendToFile(this.codeGenForTables(tabList));
+	}
+	
+	private String codeGenForTables(List<DatabaseTable> tabList)
+	{
+		String tablesStr = "def GenState(label):\n";
+		String returnStr = indentStr + "return [";
+		for(int i = 0; i < tabList.size(); i++)
+		{
+			DatabaseTable dt = tabList.get(i);
+			tablesStr += indentStr + "table_" + dt.get_Table_Name();
+			tablesStr += " = Array(\'" + tablePrefix + Integer.toString(this.getNextSequence()) + "'";
+			tablesStr += " + label + gen_id(), ID, " + dt.get_Table_Name() + ")" + "\n";
+			returnStr += "table_" + dt.get_Table_Name() + ",";
+		}
+		// replace the last comma with )
+		if(returnStr.endsWith(","))
+		{
+			returnStr = returnStr.substring(0, returnStr.length() - 1) + "]\n";
+		}
+		tablesStr += returnStr;
+		return tablesStr;
 	}
 	
 	private String codeGenForRecord(DatabaseTable tabIns) {
@@ -94,6 +128,15 @@ public class CodeGenerator {
 	private void codeGenForQueries() {
 		// code related to queries 
 		this.fWritter.appendToFile(customizedLineSeparator);
+		
+		// TODO: here please
+		// first read every queries
+		List<String> qrys = this.qryParser.getQueries();
+		// iterate each query, we create a function
+		for(int i = 0; i < qrys.size(); i++)
+		{
+			this.fWritter.appendToFile(this.qryParser.codeGenForOneQuery(qrys.get(i)) + "\n");
+		}
 	}
 	
 	private void codeGenForInvariant() {
@@ -115,9 +158,10 @@ public class CodeGenerator {
 	 * 
 	 * @param dbSchemaFile Database Schema File
 	 */
-	public CodeGenerator(String projectName, String dbSchemaFile) {
+	public CodeGenerator(String projectName, String dbSchemaFile, String qryFile) {
 		this.fWritter = new FileWritter(projectName);
 		this.dbSchemaParser = new SchemaParser(dbSchemaFile);
+		this.qryParser = new QueryParser(this.dbSchemaParser, qryFile);
 	}
 
 	/**
@@ -126,16 +170,17 @@ public class CodeGenerator {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		if(args.length != 2)
+		if(args.length != 3)
 		{
-			System.out.println("[Correct Usage:] java -jar codeGen-big.jar projectName dbSchema");
+			System.out.println("[Correct Usage:] java -jar codeGen-big.jar projectName dbSchema qryFile");
 			System.exit(-1);
 		}
 		
 		String projectName = args[0];
 		String dbSchemaFile = args[1];
+		String qFile = args[2];
 		
-		CodeGenerator cGen = new CodeGenerator(projectName, dbSchemaFile);
+		CodeGenerator cGen = new CodeGenerator(projectName, dbSchemaFile, qFile);
 		cGen.codeGenForHeader();
 		cGen.codeGenForDBSchema();
 		cGen.codeGenForQueries();
