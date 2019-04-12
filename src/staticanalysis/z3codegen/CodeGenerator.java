@@ -170,11 +170,11 @@ public class CodeGenerator {
 	 * 
 	 * @param dbSchemaFile Database Schema File
 	 */
-	public CodeGenerator(String projectName, String dbSchemaFile, String qryFile, String projectPath) {
+	public CodeGenerator(String projectName, String dbSchemaFile, String qryFile, String projectPath, String filterFile) {
 		this.fWritter = new FileWritter(projectName);
 		this.dbSchemaParser = new SchemaParser(dbSchemaFile);
 		this.qryParser = new QueryParser(this.dbSchemaParser, qryFile);
-		this.pj = new Project();
+		this.pj = new Project(projectName, projectPath, filterFile, this.dbSchemaParser, this.qryParser);
 	}
 
 	/**
@@ -183,9 +183,9 @@ public class CodeGenerator {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		if(args.length != 4)
+		if(args.length != 5)
 		{
-			System.out.println("[Correct Usage:] java -jar codeGen-big.jar projectName dbSchema qryFile pjPath");
+			System.out.println("[Correct Usage:] java -jar codeGen-big.jar projectName dbSchema qryFile pjPath filterFile");
 			System.exit(-1);
 		}
 		
@@ -193,8 +193,9 @@ public class CodeGenerator {
 		String dbSchemaFile = args[1];
 		String qFile = args[2];
 		String pjPath = args[3];
+		String ffPath = args[4];
 		
-		CodeGenerator cGen = new CodeGenerator(projectName, dbSchemaFile, qFile, pjPath);
+		CodeGenerator cGen = new CodeGenerator(projectName, dbSchemaFile, qFile, pjPath, ffPath);
 		cGen.codeGenForHeader();
 		cGen.codeGenForDBSchema();
 		cGen.codeGenForQueries();
