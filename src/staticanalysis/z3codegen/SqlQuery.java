@@ -210,7 +210,7 @@ public class SqlQuery {
 			newStr = newStr.substring(0, newStr.length() - 2) + ")\n";
 		}
 		
-		newStr += CodeGenerator.indentStr + "return Store(m, " + newPrefix + recordPrefix + tableName + ")\n";
+		newStr += CodeGenerator.indentStr + "return Store(m, " + this.getPrimaryKeyList(tableName) + ", " + newPrefix + recordPrefix + tableName + ")\n";
 		codeStr += newStr;
 		return codeStr;
 	}
