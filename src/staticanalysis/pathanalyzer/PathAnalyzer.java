@@ -63,6 +63,11 @@ public class PathAnalyzer {
 		functionMustBeProcessedList = fM;
 	}
 	
+	public static String[] getFunctionList() {
+		String[] txnList = functionMustBeProcessedList.toArray(new String[0]);
+		return txnList;
+	}
+	
 	/**
 	 * Adds the function must be processed list from file.
 	 *

@@ -55,8 +55,23 @@ public class Project {
 				
 		System.out.println("Finished the cfg generation");
 				
+		
+	}
+	
+	private void generateTxnList() {
+		this.txnList = new ArrayList<AppTransaction>();
+		// iterate all code and create shadow and conditions
+		
 		PathAnalyzer.addFunctionMustBeProcessedListFromFile(this.filterFile);
-				
+		
+		String[] txnNames = PathAnalyzer.getFunctionList();
+		for(int i = 0; i < txnNames.length; i++)
+		{
+			AppTransaction appT = new AppTransaction(txnNames[i]);
+			this.txnList.add(appT);
+		}
+		
+		
 		HashMap<CFGGraph<CodeNodeIdentifier, Expression>, PathAbstraction> pathAbMap = PathAbstractionCreator
 				.obtainAllPathAbstractionForWholeProject(pjsParser.getMethodCfgMapping());
 				
@@ -70,12 +85,6 @@ public class Project {
 		List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList = PathAnalyzer.obtainAllReducedCfgGraphs(cfgPathAbMapping);
 				
 		System.out.println("reduced cfg list size " + reducedCfgList.size());
-		
-	}
-	
-	private void generateTxnList() {
-		this.txnList = new ArrayList<AppTransaction>();
-		// iterate all code
 	}
 
 	/**

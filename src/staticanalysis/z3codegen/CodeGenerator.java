@@ -153,12 +153,20 @@ public class CodeGenerator {
 		// get list of transactions
 		List<AppTransaction> txnList = this.pj.getTxnList();
 		
+		String opListStr = "op_list = ["; 
 		for(int i = 0; i < txnList.size(); i++)
 		{
 			AppTransaction appT = txnList.get(i);
-			String codeStr = appT.codeGenForTransaction();
+			String codeStr = appT.codeGenForTransaction() + "\n";
 			this.fWritter.appendToFile(codeStr);
+			opListStr += appT.getTxnName() + "(), ";
 		}
+		
+		// generate the operation list
+		if(opListStr.endsWith(", ")) {
+			opListStr = opListStr.substring(0, opListStr.length() - 2) + "]\n";
+		}
+		this.fWritter.appendToFile(opListStr);
 	}
 	
 	private void codeGenForFoot() {
