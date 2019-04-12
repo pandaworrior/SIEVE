@@ -141,6 +141,11 @@ public class TemplateCreator extends SourceCodeGenerator{
 		this.statisMap = new HashMap<String, PathTemplateNumPair>();
 	}
 	
+	public TemplateCreator(){
+		super("", CLASS_NAME_STR);
+		this.cJsqlParser = new CCJSqlParserManager();
+	}
+	
 	/**
 	 * Gets the cfg list.
 	 *

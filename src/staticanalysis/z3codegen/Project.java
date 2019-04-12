@@ -5,7 +5,9 @@ package staticanalysis.z3codegen;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
 import japa.parser.ast.expr.Expression;
 import staticanalysis.codeparser.CodeNodeIdentifier;
@@ -39,6 +41,22 @@ public class Project {
 	
 	List<AppTransaction> txnList;
 	
+	static List<String> allStates;
+	
+	static List<String> allArgvs;
+	
+	public static int getStateIndex(String stateStr) {
+		int index = -1;
+		index = allStates.indexOf(stateStr);
+		return index;
+	}
+	
+	public static int getArgvIndex(String argvStr) {
+		int index = -1;
+		index = allStates.indexOf(argvStr);
+		return index;
+	}
+	
 	public List<AppTransaction> getTxnList(){
 		return this.txnList;
 	}
@@ -60,16 +78,11 @@ public class Project {
 	
 	private void generateTxnList() {
 		this.txnList = new ArrayList<AppTransaction>();
+		allStates = new ArrayList<String>();
+		allArgvs = new ArrayList<String>();
 		// iterate all code and create shadow and conditions
 		
 		PathAnalyzer.addFunctionMustBeProcessedListFromFile(this.filterFile);
-		
-		String[] txnNames = PathAnalyzer.getFunctionList();
-		for(int i = 0; i < txnNames.length; i++)
-		{
-			AppTransaction appT = new AppTransaction(txnNames[i]);
-			this.txnList.add(appT);
-		}
 		
 		
 		HashMap<CFGGraph<CodeNodeIdentifier, Expression>, PathAbstraction> pathAbMap = PathAbstractionCreator
@@ -81,10 +94,20 @@ public class Project {
 		HashMap<CFGGraph<CodeNodeIdentifier, Expression>, ReducedPathAbstractionSet> cfgPathAbMapping = 
 					PathAnalyzer.obtainAllReducePathAbstractions(pathAbMap);
 		
-		//get all reduced control flow graph
-		List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList = PathAnalyzer.obtainAllReducedCfgGraphs(cfgPathAbMapping);
-				
-		System.out.println("reduced cfg list size " + reducedCfgList.size());
+		// iterate all transactions
+		
+		Iterator<Entry<CFGGraph<CodeNodeIdentifier, Expression>, ReducedPathAbstractionSet>> it = cfgPathAbMapping.entrySet().iterator();
+		while(it.hasNext()){
+			Entry<CFGGraph<CodeNodeIdentifier, Expression>, ReducedPathAbstractionSet> itEntry = it.next();
+			CFGGraph<CodeNodeIdentifier, Expression> cfg = itEntry.getKey();
+			ReducedPathAbstractionSet rPathAbSet = itEntry.getValue();
+			String txnName = cfg.getCfgIdentifier().getShortName();
+			List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList = PathAnalyzer.obtainAllReducedControlFlowGraphs(cfg, rPathAbSet);
+			System.out.println("reduced cfg list size " + reducedCfgList.size());
+			
+			AppTransaction appT = new AppTransaction(txnName, reducedCfgList);
+			this.txnList.add(appT);
+		}
 	}
 
 	/**

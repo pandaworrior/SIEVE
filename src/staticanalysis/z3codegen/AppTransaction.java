@@ -6,6 +6,10 @@ package staticanalysis.z3codegen;
 import java.util.ArrayList;
 import java.util.List;
 
+import japa.parser.ast.expr.Expression;
+import staticanalysis.codeparser.CodeNodeIdentifier;
+import staticanalysis.datastructures.controlflowgraph.CFGGraph;
+
 /**
  * @author cheng
  *
@@ -19,8 +23,10 @@ public class AppTransaction {
 	List<String> dependList;
 	List<String> writeSet;
 	
+	List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList;
+	
 	private String codeGenForInitFunctionOps() {
-		String codeStr = "self.ops = [";
+		String codeStr = "self.ops = ([";
 		for(int i = 0; i < this.shadowOps.size(); i++)
 		{
 			codeStr += "(self.cond" + i + ", self.sop" + i + "), "; 
@@ -86,7 +92,7 @@ public class AppTransaction {
 	
 	public String codeGenForTransaction() {
 		String codeStr = "class " + this.txnName + "(object):\n";
-		codeStr += this.codeGenForInitFunction();
+		codeStr += this.codeGenForInitFunction() + "\n";
 		
 		// generate code of conditions and shadow operations
 		for(int i = 0; i < this.shadowOps.size(); i++)
@@ -100,16 +106,26 @@ public class AppTransaction {
 	public String getTxnName() {
 		return this.txnName;
 	}
+	
+	private void addAllShadowOps() {
+		for(int i = 0; i < this.reducedCfgList.size(); i++)
+		{
+			ShadowOp shOp = new ShadowOp(i, this.reducedCfgList.get(i));
+			this.shadowOps.add(shOp);
+		}
+	}
 
 	/**
 	 * 
 	 */
-	public AppTransaction(String tName) {
+	public AppTransaction(String tName, List<CFGGraph<CodeNodeIdentifier, Expression>> rCfgList) {
 		this.txnName = tName;
 		this.shadowOps = new ArrayList<ShadowOp> ();
 		this.syncList = new ArrayList<String>();
 		this.dependList = new ArrayList<String>();
 		this.writeSet = new ArrayList<String>();
+		this.reducedCfgList = rCfgList;
+		this.addAllShadowOps();
 	}
 
 }
