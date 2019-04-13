@@ -44,12 +44,19 @@ public class ShadowOperationTemplate {
 	
 	private int shdOpTemplateId;
 	
+	private List<String> updateQueries;
+	
 	/**
 	 * Instantiates a new shadow operation template.
 	 */
 	public ShadowOperationTemplate(){
 		this.crdtOpList = new ArrayList<Operation>();
+		this.updateQueries = new ArrayList<String>();
 		this.setShdOpTemplateId(this.getNextId());
+	}
+	
+	public List<String> getAllUpdateQueries(){
+		return this.updateQueries;
 	}
 	
 	/**
@@ -59,6 +66,7 @@ public class ShadowOperationTemplate {
 	 */
 	public ShadowOperationTemplate(List<Operation> opList){
 		this.setCrdtOpList(opList);
+		this.updateQueries = new ArrayList<String>();
 		this.setShdOpTemplateId(this.getNextId());
 	}
 	
@@ -71,6 +79,7 @@ public class ShadowOperationTemplate {
 	public ShadowOperationTemplate(List<Operation> opList, String methodId){
 		this.setCrdtOpList(opList);
 		this.setMethodIdentifier(methodId);
+		this.updateQueries = new ArrayList<String>();
 		this.setShdOpTemplateId(this.getNextId());
 	}
 
@@ -99,6 +108,11 @@ public class ShadowOperationTemplate {
 	 */
 	public void addOperation(Operation op){
 		this.crdtOpList.add(op);
+	}
+	
+	public void addUpdateQuery(String uQry)
+	{
+		this.updateQueries.add(uQry);
 	}
 
 	/**

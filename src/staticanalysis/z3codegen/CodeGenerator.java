@@ -3,6 +3,7 @@
  */
 package staticanalysis.z3codegen;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import util.annotationparser.SchemaParser;

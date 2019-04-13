@@ -9,6 +9,7 @@ import java.util.List;
 import japa.parser.ast.expr.Expression;
 import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.datastructures.controlflowgraph.CFGGraph;
+import util.annotationparser.SchemaParser;
 
 /**
  * @author cheng
@@ -22,6 +23,7 @@ public class AppTransaction {
 	List<String> syncList;
 	List<String> dependList;
 	List<String> writeSet;
+	SchemaParser spParser;
 	
 	List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList;
 	
@@ -110,7 +112,7 @@ public class AppTransaction {
 	private void addAllShadowOps() {
 		for(int i = 0; i < this.reducedCfgList.size(); i++)
 		{
-			ShadowOp shOp = new ShadowOp(i, this.reducedCfgList.get(i));
+			ShadowOp shOp = new ShadowOp(i, this.reducedCfgList.get(i), this.spParser);
 			this.shadowOps.add(shOp);
 		}
 	}
@@ -118,13 +120,14 @@ public class AppTransaction {
 	/**
 	 * 
 	 */
-	public AppTransaction(String tName, List<CFGGraph<CodeNodeIdentifier, Expression>> rCfgList) {
+	public AppTransaction(String tName, List<CFGGraph<CodeNodeIdentifier, Expression>> rCfgList, SchemaParser _spParser) {
 		this.txnName = tName;
 		this.shadowOps = new ArrayList<ShadowOp> ();
 		this.syncList = new ArrayList<String>();
 		this.dependList = new ArrayList<String>();
 		this.writeSet = new ArrayList<String>();
 		this.reducedCfgList = rCfgList;
+		this.spParser = _spParser;
 		this.addAllShadowOps();
 	}
 

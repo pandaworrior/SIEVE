@@ -105,7 +105,7 @@ public class Project {
 			List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList = PathAnalyzer.obtainAllReducedControlFlowGraphs(cfg, rPathAbSet);
 			System.out.println("reduced cfg list size " + reducedCfgList.size());
 			
-			AppTransaction appT = new AppTransaction(txnName, reducedCfgList);
+			AppTransaction appT = new AppTransaction(txnName, reducedCfgList, this.spParser);
 			this.txnList.add(appT);
 		}
 	}

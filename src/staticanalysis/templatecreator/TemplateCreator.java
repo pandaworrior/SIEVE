@@ -595,7 +595,7 @@ public class TemplateCreator extends SourceCodeGenerator{
 	
 	//create crdt operations for all statements for a control flow graph
 	/**
-	 * Creates the shadow op template.
+	 * Creates the shadow op template. used by explicit trade off project
 	 *
 	 * @param cfg the cfg
 	 * @return the shadow operation template
@@ -607,13 +607,16 @@ public class TemplateCreator extends SourceCodeGenerator{
 			shdOpTemplate = new ShadowOperationTemplate();
 			for(int i = 0; i < allUpdatingQueries.size(); i++){
 				String updatingQuery = allUpdatingQueries.get(i);
+				System.out.println("analyze " + updatingQuery);
 				//remove all double quotes
 				updatingQuery = StringOperations.removeAllDoubleQuotesAndPlus(updatingQuery);
-				updatingQuery = this.replaceContentAfterEqualSignFromUpdateQuery(updatingQuery);
-				updatingQuery = this.replaceContentAfterValuesSignFromInsertQuery(updatingQuery);
+				System.out.println("analyze " + updatingQuery);
+				//updatingQuery = this.replaceContentAfterEqualSignFromUpdateQuery(updatingQuery);
+				//updatingQuery = this.replaceContentAfterValuesSignFromInsertQuery(updatingQuery);
 				//System.out.println("analyze " + updatingQuery);
-				Operation op = this.createCrdtOpForStatement(updatingQuery);
-				shdOpTemplate.addOperation(op);
+				//Operation op = this.createCrdtOpForStatement(updatingQuery);
+				//shdOpTemplate.addOperation(op);
+				shdOpTemplate.addUpdateQuery(updatingQuery);
 			}
 		}else {
 			Debug.println("No update sql statement are found");
@@ -701,6 +704,7 @@ public class TemplateCreator extends SourceCodeGenerator{
 		}
 		return templateList;
 	}
+	
 	
 	/**
 	 * Creates the all table variables.

@@ -55,6 +55,8 @@ public class SqlQuery {
 	
 	static String parameterSuffix = "_p";
 	
+	static String tablePrefix = "table_";
+	
 	private void setNameAndQuery(String sStr) {
 		
 		System.out.println("Set name and query for a qry " + sStr);
@@ -73,7 +75,7 @@ public class SqlQuery {
 		System.out.println("Query name is " + this.sqlName + " query is " + this.sqlStr);
 	}
 	
-	private String getPrimaryKeyList(String tableName) {
+	private static String getPrimaryKeyList(String tableName) {
 		String returnStr = "";
 		// get Table instance
 		DatabaseTable dTable = dbSchemaParser.getTableByName(tableName);
@@ -211,6 +213,78 @@ public class SqlQuery {
 		}
 		
 		newStr += CodeGenerator.indentStr + "return Store(m, " + this.getPrimaryKeyList(tableName) + ", " + newPrefix + recordPrefix + tableName + ")\n";
+		codeStr += newStr;
+		return codeStr;
+	}
+	
+	private static String getOldTable(String tableName, int tableUsedTime) {
+		if(tableUsedTime == 0)
+		{
+			return tablePrefix + tableName;
+		}else {
+			return tablePrefix + tableName + "_" + (tableUsedTime - 1);
+		}
+	}
+	
+	public static String codeGenForUpdateStmt(Update updateStmt, int tableUsedTime)
+	{
+		String codeStr = "";
+		String tableName = updateStmt.getTable().getName();
+		String oldTableName = getOldTable(tableName, tableUsedTime);
+		String newTableName = tablePrefix + tableName + "_" + tableUsedTime;
+		
+		// create a list of parameters
+		List<String> colList = new ArrayList<String>();
+		List<String> valList = new ArrayList<String>();
+		Iterator colIt = updateStmt.getColumns().iterator();
+		while(colIt.hasNext()){
+			String colName = colIt.next().toString();
+			colList.add(colName);
+		}
+		
+		// get the old record
+		String oldStr = CodeGenerator.indentStr + CodeGenerator.indentStr + oldPrefix + recordPrefix + tableName + " = Select(" + oldTableName + ", ";
+		oldStr += getPrimaryKeyList(tableName) + ")\n";
+		
+		codeStr += oldStr;
+		
+		Iterator valueIt = updateStmt.getExpressions().iterator();
+		while(valueIt.hasNext()){
+			valList.add(valueIt.next().toString());
+		}
+		
+		for(int i = 0; i < colList.size(); i++) {
+			DataField dF = dbSchemaParser.getTableByName(tableName).get_Data_Field(colList.get(i));
+			String oldFieldStr = CodeGenerator.indentStr + CodeGenerator.indentStr + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+			oldFieldStr += " = " + tableName + "." + dF.get_Data_Field_Name() + "(" + recordPrefix + tableName + ")\n";
+			String newFieldStr = CodeGenerator.indentStr + CodeGenerator.indentStr + newPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+			
+			String valStr = valList.get(i);
+			if(valStr.contains("+"))
+			{
+				newFieldStr += " = " + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+				newFieldStr += " + " + dF.get_Data_Field_Name() + parameterSuffix + "\n";
+			}else if(valStr.contains("-")) {
+				newFieldStr += " = " + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+				newFieldStr += " - " + dF.get_Data_Field_Name() + parameterSuffix + "\n";
+			}else {
+				newFieldStr += " = " + dF.get_Data_Field_Name() + parameterSuffix + "\n";
+			}
+			codeStr += oldFieldStr;
+			codeStr += newFieldStr;
+		}
+		
+		// store the new record
+		String newStr = CodeGenerator.indentStr + CodeGenerator.indentStr + newPrefix + recordPrefix + tableName + " = " + tableName + ".new(";
+		for(int i = 0; i < colList.size(); i++)
+		{
+			newStr += newPrefix + fieldPrefix + recordPrefix + colList.get(i) + ", ";
+		}
+		if(newStr.endsWith(", ")) {
+			newStr = newStr.substring(0, newStr.length() - 2) + ")\n";
+		}
+		
+		newStr += CodeGenerator.indentStr + CodeGenerator.indentStr + newTableName + " = " + "Store(" + oldTableName + ", " + getPrimaryKeyList(tableName) + ", " + newPrefix + recordPrefix + tableName + ")\n";
 		codeStr += newStr;
 		return codeStr;
 	}

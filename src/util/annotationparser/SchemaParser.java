@@ -170,6 +170,17 @@ public class SchemaParser {
 	public DatabaseTable getTableByName(String tableName){
 		return this.tableCrdtFormMap.get(tableName);
 	}
+	
+	
+	public List<String> getTableList(){
+		List<DatabaseTable> dtList = this.getAllTableInstances();
+		List<String> tabNameList = new ArrayList<String>();
+		for(int i = 0 ; i < dtList.size(); i++)
+		{
+			tabNameList.add(dtList.get(i).get_Table_Name());
+		}
+		return tabNameList;
+	}
 
 	/**
 	 * Prints the out.
