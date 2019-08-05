@@ -118,6 +118,7 @@ public class PathAnalyzer {
 			functionMustBeProcessedList = new HashSet<String>();
 		}
 		String transactionIdentifier = assembleTransactionIdStr(cName, fName, bLine);
+		//System.out.println("A function must be processed " + cName + "-" + fName + "-" + bLine);
 		functionMustBeProcessedList.add(transactionIdentifier);
 	}
 	
@@ -132,8 +133,11 @@ public class PathAnalyzer {
 		if(functionMustBeProcessedList == null) {
 			return true;
 		}
+		
 		String txnIdStr = assembleTransactionIdStr(className, functionName, beginLine);
+		//System.out.println("Check if a function must be processed " + txnIdStr);
 		if(functionMustBeProcessedList.contains(txnIdStr)) {
+			//System.out.println("Yes, this function must be processed " + txnIdStr);
 			return true;
 		}else {
 			return false;
@@ -153,7 +157,7 @@ public class PathAnalyzer {
 		Iterator<Entry<CFGGraph<CodeNodeIdentifier, Expression>, PathAbstraction>> it = cfgPathAbMapping
 				.entrySet().iterator();
 		float latency = 0;
-		String finalOutput = "";
+		//String finalOutput = "";
 		int totalReducedPath = 0;
 		int numOfFunctionMustBeProcessed = 0;
 		while (it.hasNext()) {
@@ -170,8 +174,8 @@ public class PathAnalyzer {
 				long eachEndTs = System.nanoTime();
 				float eachLatency = (float)((eachEndTs - eachStartTs) / 1000000);
 				latency += eachLatency;
-				finalOutput += cfg.getCfgIdentifierPlainText() + " " + eachLatency + " " +
-					reducePathAbSet.getReducedPathAbstractionCount()+ "\n";
+				//finalOutput += cfg.getCfgIdentifierPlainText() + " " + eachLatency + " " +
+				//	reducePathAbSet.getReducedPathAbstractionCount()+ "\n";
 				totalReducedPath += reducePathAbSet.getReducedPathAbstractionCount();
 				//System.out.println("method : " + cfg.getMethodNameAndLocation());
 				//System.out.println("original " + pathAb.toString());
@@ -184,8 +188,8 @@ public class PathAnalyzer {
 				Debug.println("This method is filtered out, no process " + cfg.getCfgIdentifierPlainText());
 			}
 		}
-		finalOutput += "Total time to reduce " + cfgPathAbMapping.size() + " regx must be processed " +numOfFunctionMustBeProcessed+ " to "+  totalReducedPath +" is " + latency;
-		System.out.println(finalOutput);
+		//finalOutput += "Total time to reduce " + cfgPathAbMapping.size() + " regx must be processed " +numOfFunctionMustBeProcessed+ " to "+  totalReducedPath +" is " + latency;
+		//System.out.println(finalOutput);
 		return cfgReducedPathAbMapping;
 	}
 	

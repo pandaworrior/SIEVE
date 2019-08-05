@@ -6,6 +6,7 @@ package staticanalysis.z3codegen;
 import java.util.ArrayList;
 import java.util.List;
 
+import staticanalysis.templatecreator.TemplateCreator;
 import util.annotationparser.SchemaParser;
 import util.crdtlib.dbannotationtypes.dbutil.DataField;
 import util.crdtlib.dbannotationtypes.dbutil.DatabaseTable;
@@ -55,6 +56,7 @@ public class CodeGenerator {
 		
 		// ID 
 		this.fWritter.appendToFile("ID = IntSort()\n");
+
 		
 		// parse the schema
 		this.parseDBSchema();
@@ -97,7 +99,9 @@ public class CodeGenerator {
 		for(int i = 0; i < dfList.size(); i++)
 		{
 			DataField df = dfList.get(i);
-			if(df.is_Primary_Key()) {
+			if(df.is_Primary_Key() || df.get_Data_Field_Name().contains("_SP_lock") ||
+					df.get_Data_Field_Name().contains("_SP_ts") ||
+					df.get_Data_Field_Name().contains("_SP_del")) {
 				continue;
 			}
 			recordStr += "(\'" + df.get_Data_Field_Name() + "\', ";
@@ -106,15 +110,18 @@ public class CodeGenerator {
 					df.get_Data_Type().contentEquals("INT") || 
 					df.get_Data_Type().contentEquals("BIGINT") || 
 					df.get_Data_Type().contentEquals("TIMESTAMP") ||
-					df.get_Data_Type().contentEquals("DATE")) {
+					df.get_Data_Type().contentEquals("DATE") ||
+					df.get_Data_Type().contentEquals("DATETIME")) {
 				recordStr += "IntSort()),";
 			}else if(df.get_Data_Type().contentEquals("VARCHAR") ||
-					df.get_Data_Type().contentEquals("TEXT")) {
+					df.get_Data_Type().contentEquals("TEXT") ||
+					df.get_Data_Type().contentEquals("String")) {
+				//System.out.println(df.toString());
 				recordStr += "StringSort()),";
 			}else if(df.get_Data_Type().contentEquals("FLOAT")) {
 				recordStr += "RealSort()),";
 			}else {
-				System.out.println("Undefined data type " + df.get_Data_Type());
+				System.out.println("Undefined data type " + df.get_Data_Type() + " " + df.toString());
 				System.exit(-1);
 			}
 		}
@@ -161,6 +168,7 @@ public class CodeGenerator {
 			String codeStr = appT.codeGenForTransaction() + "\n";
 			this.fWritter.appendToFile(codeStr);
 			opListStr += appT.getTxnName() + "(), ";
+			
 		}
 		
 		// generate the operation list
@@ -183,6 +191,7 @@ public class CodeGenerator {
 		this.fWritter = new FileWritter(projectName);
 		this.dbSchemaParser = new SchemaParser(dbSchemaFile);
 		this.qryParser = new QueryParser(this.dbSchemaParser, qryFile);
+		ShadowOp.tmpCreator = new TemplateCreator(this.dbSchemaParser, null, projectName, null);
 		this.pj = new Project(projectName, projectPath, filterFile, this.dbSchemaParser, this.qryParser);
 	}
 
@@ -198,19 +207,30 @@ public class CodeGenerator {
 			System.exit(-1);
 		}
 		
+		
+		
 		String projectName = args[0];
 		String dbSchemaFile = args[1];
 		String qFile = args[2];
 		String pjPath = args[3];
 		String ffPath = args[4];
 		
+		
+		long startTime = System.nanoTime();
 		CodeGenerator cGen = new CodeGenerator(projectName, dbSchemaFile, qFile, pjPath, ffPath);
+		
 		cGen.codeGenForHeader();
+		long endTime1 = System.nanoTime();
 		cGen.codeGenForDBSchema();
 		cGen.codeGenForQueries();
 		cGen.codeGenForInvariant();
+		long endTime2 = System.nanoTime();
 		cGen.codeGenForTransactions();
 		cGen.codeGenForFoot();
+		long endTime3 = System.nanoTime();
+		
+		System.out.println("Time to gen db specs: " + (endTime2 - endTime1)*0.000001);
+		System.out.println("Time to gen side effects: " + (endTime3 - startTime - (endTime2 - endTime1))*0.000001);
 		System.out.println("Code genearted is finished for " + projectName);
 	}
 

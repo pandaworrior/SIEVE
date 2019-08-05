@@ -103,7 +103,7 @@ public class Project {
 			ReducedPathAbstractionSet rPathAbSet = itEntry.getValue();
 			String txnName = cfg.getCfgIdentifier().getShortName();
 			List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList = PathAnalyzer.obtainAllReducedControlFlowGraphs(cfg, rPathAbSet);
-			System.out.println("reduced cfg list size " + reducedCfgList.size());
+			//System.out.println("reduced cfg list size " + reducedCfgList.size());
 			
 			AppTransaction appT = new AppTransaction(txnName, reducedCfgList, this.spParser);
 			this.txnList.add(appT);

@@ -23,7 +23,7 @@ public class AnnotationParserTest {
 	 */
 	public static void main(String args[]) throws IOException {
 
-		String fileName = "/var/tmp/workspace1/georeplication/src/test/util/annotationparser/sqlSchemaTest.sql";
+		String fileName = "/home/cheng/Code/explicit_tradeoff/code/benchmark/oltpbench/config/olisipo/seats/seats_olisipo.sql";//"/home/cheng/Code/explicit_tradeoff/code/benchmark/oltpbench/config/olisipo/smallbank/smallbank_olisipo.sql";//"/home/cheng/Code/RedBlue_consistency/src/applications/RUBiStxmud/database/rubis_vasco.sql";
 		SchemaParser sP = new SchemaParser(fileName);
 		sP.parseAnnotations();
 		sP.printOut();

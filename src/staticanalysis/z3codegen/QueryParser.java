@@ -40,7 +40,7 @@ public class QueryParser {
 				line = line.trim();
 				if(!line.contentEquals(""))
 				{
-					System.out.println("read a line " + line + " size " + line.length());
+					//System.out.println("read a line " + line + " size " + line.length());
 					qrys.add(line);
 				}
 			}

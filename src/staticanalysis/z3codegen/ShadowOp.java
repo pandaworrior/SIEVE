@@ -11,6 +11,8 @@ import java.util.List;
 
 import japa.parser.ast.expr.Expression;
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.statement.delete.Delete;
+import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.update.Update;
 import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.datastructures.controlflowgraph.CFGGraph;
@@ -70,16 +72,41 @@ public class ShadowOp {
 				String uQuery = uQrys.get(i);
 				try {
 					net.sf.jsqlparser.statement.Statement sqlStmt = QueryParser.cJsqlParser.parse(new StringReader(uQuery));
-					Update uStmt = (Update) sqlStmt;
-					String tableName = uStmt.getTable().getName();
-					Integer usedTimes = tableUsedMap.get(tableName);
-					if(usedTimes == null) {
-						codeStr += SqlQuery.codeGenForUpdateStmt(uStmt, 0);
-						tableUsedMap.put(tableName, 1);
-					}else {
-						codeStr += SqlQuery.codeGenForUpdateStmt(uStmt, usedTimes.intValue());
-						tableUsedMap.put(tableName, usedTimes.intValue() + 1);
+					if(sqlStmt instanceof Update) {
+						Update uStmt = (Update) sqlStmt;
+						String tableName = uStmt.getTable().getName();
+						Integer usedTimes = tableUsedMap.get(tableName);
+						if(usedTimes == null) {
+							codeStr += SqlQuery.codeGenForUpdateStmt(uStmt, 0);
+							tableUsedMap.put(tableName, 1);
+						}else {
+							codeStr += SqlQuery.codeGenForUpdateStmt(uStmt, usedTimes.intValue());
+							tableUsedMap.put(tableName, usedTimes.intValue() + 1);
+						}
+					}else if(sqlStmt instanceof Insert) {
+						Insert uStmt = (Insert) sqlStmt;
+						String tableName = uStmt.getTable().getName();
+						Integer usedTimes = tableUsedMap.get(tableName);
+						if(usedTimes == null) {
+							codeStr += SqlQuery.codeGenForInsertStmt(uStmt, 0);
+							tableUsedMap.put(tableName, 1);
+						}else {
+							codeStr += SqlQuery.codeGenForInsertStmt(uStmt, usedTimes.intValue());
+							tableUsedMap.put(tableName, usedTimes.intValue() + 1);
+						}
+					}else if(sqlStmt instanceof Delete) {
+						Delete uStmt = (Delete) sqlStmt;
+						String tableName = uStmt.getTable().getName();
+						Integer usedTimes = tableUsedMap.get(tableName);
+						if(usedTimes == null) {
+							codeStr += SqlQuery.codeGenForDeleteStmt(uStmt, 0);
+							tableUsedMap.put(tableName, 1);
+						}else {
+							codeStr += SqlQuery.codeGenForDeleteStmt(uStmt, usedTimes.intValue());
+							tableUsedMap.put(tableName, usedTimes.intValue() + 1);
+						}
 					}
+					
 					
 				} catch (JSQLParserException e) {
 					// TODO Auto-generated catch block

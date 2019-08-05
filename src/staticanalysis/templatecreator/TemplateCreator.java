@@ -607,15 +607,17 @@ public class TemplateCreator extends SourceCodeGenerator{
 			shdOpTemplate = new ShadowOperationTemplate();
 			for(int i = 0; i < allUpdatingQueries.size(); i++){
 				String updatingQuery = allUpdatingQueries.get(i);
-				System.out.println("analyze " + updatingQuery);
+				//System.out.println("analyze " + updatingQuery);
 				//remove all double quotes
 				updatingQuery = StringOperations.removeAllDoubleQuotesAndPlus(updatingQuery);
-				System.out.println("analyze " + updatingQuery);
-				//updatingQuery = this.replaceContentAfterEqualSignFromUpdateQuery(updatingQuery);
-				//updatingQuery = this.replaceContentAfterValuesSignFromInsertQuery(updatingQuery);
 				//System.out.println("analyze " + updatingQuery);
-				//Operation op = this.createCrdtOpForStatement(updatingQuery);
-				//shdOpTemplate.addOperation(op);
+				
+				/** please comment out the following five lines of codes */
+				updatingQuery = this.replaceContentAfterEqualSignFromUpdateQuery(updatingQuery);
+				updatingQuery = this.replaceContentAfterValuesSignFromInsertQuery(updatingQuery);
+				//System.out.println("analyze " + updatingQuery);
+				Operation op = this.createCrdtOpForStatement(updatingQuery);
+				shdOpTemplate.addOperation(op);
 				shdOpTemplate.addUpdateQuery(updatingQuery);
 			}
 		}else {
@@ -834,13 +836,15 @@ public class TemplateCreator extends SourceCodeGenerator{
 		}
 		
 		//update lww
-		List<SingleVariableDeclaration> flagVarList = new ArrayList<SingleVariableDeclaration>();
-		MethodInvocation recordFlagMInvoc = super.getASTNode().newMethodInvocation();
-		recordFlagMInvoc.setExpression(super.getASTNode().newSimpleName(recordName));
-		recordFlagMInvoc.setName(super.getASTNode().newSimpleName("update"+this.schemaParser.getTableByName(op.getTableName()).getLwwTs().get_Data_Field_Name()));
-		recordFlagMInvoc.arguments().add(super.getASTNode().newSimpleName(LWWLTS_VALUE));
-		ExpressionStatement flagExpSt = super.getASTNode().newExpressionStatement(recordFlagMInvoc);
-		returnMap.put(flagExpSt, flagVarList);
+		if(this.schemaParser.getTableByName(op.getTableName()).getLwwTs() != null) {
+			List<SingleVariableDeclaration> flagVarList = new ArrayList<SingleVariableDeclaration>();
+			MethodInvocation recordFlagMInvoc = super.getASTNode().newMethodInvocation();
+			recordFlagMInvoc.setExpression(super.getASTNode().newSimpleName(recordName));
+			recordFlagMInvoc.setName(super.getASTNode().newSimpleName("update"+this.schemaParser.getTableByName(op.getTableName()).getLwwTs().get_Data_Field_Name()));
+			recordFlagMInvoc.arguments().add(super.getASTNode().newSimpleName(LWWLTS_VALUE));
+			ExpressionStatement flagExpSt = super.getASTNode().newExpressionStatement(recordFlagMInvoc);
+			returnMap.put(flagExpSt, flagVarList);
+		}
 		return returnMap;
 	}
 	
@@ -970,7 +974,8 @@ public class TemplateCreator extends SourceCodeGenerator{
 		this.tList = templateList;
 		for(int i = 0; i < templateList.size(); i++){
 			ShadowOperationTemplate shdOpTemplate = templateList.get(i);
-			Debug.println("create template now");
+			shdOpTemplate.setSignature();
+			//System.out.println("create template now for id " + shdOpTemplate.getFingerPrint());
 			MethodDeclaration methodDecl = this.generateCodeForShadowOpTemplate(shdOpTemplate);
 			type.bodyDeclarations().add(methodDecl);
 		}
@@ -1019,9 +1024,9 @@ public class TemplateCreator extends SourceCodeGenerator{
 			String outputStr = en.getKey() + " & " + en.getValue().getNumOfPath() + " & " + en.getValue().getNumOfTemplate();
 			numOfTotalPath += en.getValue().getNumOfPath();
 			numOfTotalTemplate += en.getValue().getNumOfTemplate();
-			System.out.println(outputStr);
+			//System.out.println(outputStr);
 		}
-		System.out.println("Generating " + numOfTotalPath + " paths " + numOfTotalTemplate + " templates");
+		//System.out.println("Generating " + numOfTotalPath + " paths " + numOfTotalTemplate + " templates");
 	}
 
 	/* (non-Javadoc)

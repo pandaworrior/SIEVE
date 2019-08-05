@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
@@ -35,9 +36,6 @@ public class SqlQuery {
 	
 	private List<String> parameters;
 	
-	/** The DB Schema Parser. */
-	static SchemaParser dbSchemaParser;
-	
 	/** Separator between the query name and query*/
 	static char cSeparator = '=';
 	
@@ -59,7 +57,7 @@ public class SqlQuery {
 	
 	private void setNameAndQuery(String sStr) {
 		
-		System.out.println("Set name and query for a qry " + sStr);
+		//System.out.println("Set name and query for a qry " + sStr);
 		// break the sStr into two parts
 		int indexOfSeparator = sStr.indexOf(cSeparator);
 		this.sqlName = sStr.substring(0, indexOfSeparator).trim();
@@ -72,13 +70,13 @@ public class SqlQuery {
 			sqlStr = sqlStr.substring(0, sqlStr.length() - 1);
 		}
 		
-		System.out.println("Query name is " + this.sqlName + " query is " + this.sqlStr);
+		//System.out.println("Query name is " + this.sqlName + " query is " + this.sqlStr);
 	}
 	
 	private static String getPrimaryKeyList(String tableName) {
 		String returnStr = "";
 		// get Table instance
-		DatabaseTable dTable = dbSchemaParser.getTableByName(tableName);
+		DatabaseTable dTable = QueryParser.dbSchemaParser.getTableByName(tableName);
 				
 		// get primary key
 		List<DataField> pkDFs = dTable.getPrimaryKeyDataFieldList();
@@ -125,7 +123,7 @@ public class SqlQuery {
 			String fieldsStr = "";
 			for(int i = 0; i < selItems.size(); i++) {
 				SelectItem sIt = selItems.get(i);
-				DataField dF = dbSchemaParser.getTableByName(tableName).get_Data_Field(sIt.toString());
+				DataField dF = QueryParser.dbSchemaParser.getTableByName(tableName).get_Data_Field(sIt.toString());
 				fieldsStr += CodeGenerator.indentStr + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
 				fieldsStr += " = " + tableName + "." + dF.get_Data_Field_Name() + "(" + recordPrefix + tableName + ")\n";
 				returnStr += fieldPrefix + recordPrefix + dF.get_Data_Field_Name() + ", ";
@@ -182,7 +180,7 @@ public class SqlQuery {
 		}
 		
 		for(int i = 0; i < colList.size(); i++) {
-			DataField dF = dbSchemaParser.getTableByName(tableName).get_Data_Field(colList.get(i));
+			DataField dF = QueryParser.dbSchemaParser.getTableByName(tableName).get_Data_Field(colList.get(i));
 			String oldFieldStr = CodeGenerator.indentStr + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
 			oldFieldStr += " = " + tableName + "." + dF.get_Data_Field_Name() + "(" + recordPrefix + tableName + ")\n";
 			String newFieldStr = CodeGenerator.indentStr + newPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
@@ -254,7 +252,7 @@ public class SqlQuery {
 		}
 		
 		for(int i = 0; i < colList.size(); i++) {
-			DataField dF = dbSchemaParser.getTableByName(tableName).get_Data_Field(colList.get(i));
+			DataField dF = QueryParser.dbSchemaParser.getTableByName(tableName).get_Data_Field(colList.get(i));
 			String oldFieldStr = CodeGenerator.indentStr + CodeGenerator.indentStr + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
 			oldFieldStr += " = " + tableName + "." + dF.get_Data_Field_Name() + "(" + recordPrefix + tableName + ")\n";
 			String newFieldStr = CodeGenerator.indentStr + CodeGenerator.indentStr + newPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
@@ -273,6 +271,102 @@ public class SqlQuery {
 			codeStr += oldFieldStr;
 			codeStr += newFieldStr;
 		}
+		
+		// store the new record
+		String newStr = CodeGenerator.indentStr + CodeGenerator.indentStr + newPrefix + recordPrefix + tableName + " = " + tableName + ".new(";
+		for(int i = 0; i < colList.size(); i++)
+		{
+			newStr += newPrefix + fieldPrefix + recordPrefix + colList.get(i) + ", ";
+		}
+		if(newStr.endsWith(", ")) {
+			newStr = newStr.substring(0, newStr.length() - 2) + ")\n";
+		}
+		
+		newStr += CodeGenerator.indentStr + CodeGenerator.indentStr + newTableName + " = " + "Store(" + oldTableName + ", " + getPrimaryKeyList(tableName) + ", " + newPrefix + recordPrefix + tableName + ")\n";
+		codeStr += newStr;
+		return codeStr;
+	}
+	
+	public static String codeGenForInsertStmt(Insert inStmt, int tableUsedTime)
+	{
+		String codeStr = "";
+		String tableName = inStmt.getTable().getName();
+		String oldTableName = getOldTable(tableName, tableUsedTime);
+		String newTableName = tablePrefix + tableName + "_" + tableUsedTime;
+		
+		// create a list of parameters
+		List<String> colList = new ArrayList<String>();
+		List<String> valList = new ArrayList<String>();
+		Iterator colIt = inStmt.getColumns().iterator();
+		while(colIt.hasNext()){
+			String colName = colIt.next().toString();
+			colList.add(colName);
+		}
+		
+		// get the old record
+		String oldStr = CodeGenerator.indentStr + CodeGenerator.indentStr + oldPrefix + recordPrefix + tableName + " = Select(" + oldTableName + ", ";
+		oldStr += getPrimaryKeyList(tableName) + ")\n";
+		
+		codeStr += oldStr;
+		
+		Iterator valueIt = ((ExpressionList)inStmt.getItemsList()).getExpressions().iterator();
+		while(valueIt.hasNext()){
+			valList.add(valueIt.next().toString());
+		}
+		
+		for(int i = 0; i < colList.size(); i++) {
+			DataField dF = QueryParser.dbSchemaParser.getTableByName(tableName).get_Data_Field(colList.get(i));
+			String oldFieldStr = CodeGenerator.indentStr + CodeGenerator.indentStr + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+			oldFieldStr += " = " + tableName + "." + dF.get_Data_Field_Name() + "(" + recordPrefix + tableName + ")\n";
+			String newFieldStr = CodeGenerator.indentStr + CodeGenerator.indentStr + newPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+			
+			String valStr = valList.get(i);
+			if(valStr.contains("+"))
+			{
+				newFieldStr += " = " + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+				newFieldStr += " + " + dF.get_Data_Field_Name() + parameterSuffix + "\n";
+			}else if(valStr.contains("-")) {
+				newFieldStr += " = " + oldPrefix + fieldPrefix + recordPrefix + dF.get_Data_Field_Name();
+				newFieldStr += " - " + dF.get_Data_Field_Name() + parameterSuffix + "\n";
+			}else {
+				newFieldStr += " = " + dF.get_Data_Field_Name() + parameterSuffix + "\n";
+			}
+			codeStr += oldFieldStr;
+			codeStr += newFieldStr;
+		}
+		
+		// store the new record
+		String newStr = CodeGenerator.indentStr + CodeGenerator.indentStr + newPrefix + recordPrefix + tableName + " = " + tableName + ".new(";
+		for(int i = 0; i < colList.size(); i++)
+		{
+			newStr += newPrefix + fieldPrefix + recordPrefix + colList.get(i) + ", ";
+		}
+		if(newStr.endsWith(", ")) {
+			newStr = newStr.substring(0, newStr.length() - 2) + ")\n";
+		}
+		
+		newStr += CodeGenerator.indentStr + CodeGenerator.indentStr + newTableName + " = " + "Store(" + oldTableName + ", " + getPrimaryKeyList(tableName) + ", " + newPrefix + recordPrefix + tableName + ")\n";
+		codeStr += newStr;
+		return codeStr;
+	}
+	
+	public static String codeGenForDeleteStmt(Delete deStmt, int tableUsedTime)
+	{
+		String codeStr = "";
+		String tableName = deStmt.getTable().getName();
+		String oldTableName = getOldTable(tableName, tableUsedTime);
+		String newTableName = tablePrefix + tableName + "_" + tableUsedTime;
+		
+		// create a list of parameters
+		List<String> colList = new ArrayList<String>();
+		List<String> valList = new ArrayList<String>();
+		
+		// get the old record
+		String oldStr = CodeGenerator.indentStr + CodeGenerator.indentStr + oldPrefix + recordPrefix + tableName + " = Select(" + oldTableName + ", ";
+		oldStr += getPrimaryKeyList(tableName) + ")\n";
+		
+		codeStr += oldStr;
+		
 		
 		// store the new record
 		String newStr = CodeGenerator.indentStr + CodeGenerator.indentStr + newPrefix + recordPrefix + tableName + " = " + tableName + ".new(";
@@ -332,7 +426,6 @@ public class SqlQuery {
 		this.setNameAndQuery(sStr);
 		this.parameters = new ArrayList<String>();
 		this.parameters.add("m"); // table
-		dbSchemaParser = sP;
 	}
 
 	/**
