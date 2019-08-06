@@ -54,6 +54,7 @@ public class CodeTransaction {
 	}
 	
 	public void printInDetails() {
+		System.out.println("txnName" + this.txnName + "; reduced cfg list size " + this.reducedCfgList.size() + "; updated path num " + this.codePaths.size());
 		
 	}
 

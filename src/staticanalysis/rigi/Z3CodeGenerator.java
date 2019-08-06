@@ -21,6 +21,10 @@ import staticanalysis.pathanalyzer.PathAnalyzer;
  * TODO list
  * 	1. we first parse a project and get all paths
  *     -> Done
+ *     1.1 get all update queries per path
+ *        -> Done
+ *     1.2 get all select queries per path
+ *        -> In progress
  *  2. we eliminate paths that either contain abort or do not contain any update statement
  *     -> Done
  *  3. we create specifications for database tables

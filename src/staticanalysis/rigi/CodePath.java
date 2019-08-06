@@ -288,6 +288,45 @@ public class CodePath {
 			return this.getUpdateSqlStatementFromPrepareStatement(precedingNodeList, namExpr);
 		}
 	}
+	
+	/**
+	 * Find sql selecting statement.
+	 *
+	 * @param precedingNodeList the preceding node list
+	 * @param cfgNode           the cfg node
+	 * @return the string
+	 */
+	private String findSqlSelectingStatement(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
+			CFGNode<CodeNodeIdentifier, Expression> cfgNode) {
+		// get the argument from the argument of the executeUpdate function
+		MethodCallExpr methodCallExpr = (MethodCallExpr) cfgNode.getNodeData();
+		List<Expression> args = methodCallExpr.getArgs();
+		/*
+		 * Fork into two branches: one for connection.execute() one for
+		 * preparestatement.executeUpdate()
+		 */
+		if (args != null) {
+			assert (args.size() == 1);
+			Expression argExpr = args.get(0);
+			// if this argument is a string, then please return this string
+			if (ExpressionParser.isStringLiteralExpression(argExpr)) {
+				return argExpr.toString();
+			} else if (ExpressionParser.isNameExpr(argExpr)) {
+				// if the argument is a variable, please find it along the path back the start
+				// of the function
+				// * find the assignment expression
+				return this.assembleStringForNameExpr(precedingNodeList, (NameExpr) argExpr);
+			} else {
+				System.err.println("This method has not been implemented!");
+				return null;
+			}
+		} else {
+			Expression scope = methodCallExpr.getScope();
+			NameExpr namExpr = this.getNameExpr(scope);
+			// find create preparestatement for this name expression
+			return this.getUpdateSqlStatementFromPrepareStatement(precedingNodeList, namExpr);
+		}
+	}
 
 	/**
 	 * Find all sql statements
@@ -304,10 +343,15 @@ public class CodePath {
 				String e = this.findSqlUpdatingStatement(precedingNodeList, cfgNode);
 				if (e != null) {
 					Debug.println("I found a string: " + e);
+					this.addOneUpdateQuery(e);
 				}
-				this.addOneUpdateQuery(e);
 			}else if(this.isExecuteQueryMethodCallExpression(expr)) {
 				Debug.println("Expr: " + expr.toString());
+				String e = this.findSqlSelectingStatement(precedingNodeList, cfgNode);
+				if (e != null) {
+					Debug.println("I found a string: " + e);
+					//this.addOneUpdateQuery(e);
+				}
 			}
 		}
 	}
