@@ -20,6 +20,7 @@ package staticanalysis.codeparser;
 import java.util.ArrayList;
 import java.util.List;
 
+import staticanalysis.codeparser.javaparserextend.ExceptionExpr;
 import staticanalysis.datastructures.controlflowgraph.CFGGraph;
 import staticanalysis.datastructures.controlflowgraph.CFGNode;
 import util.debug.Debug;
@@ -638,7 +639,7 @@ public class StatementVisitor
 				thStmt.getBeginColumn(), thStmt.getEndLine(),
 				thStmt.getEndColumn());
 		CFGNode<CodeNodeIdentifier, Expression> cfgNode = new CFGNode<CodeNodeIdentifier, Expression>(
-				cnId, new ReturnExpr(thStmt.getBeginLine(), thStmt.getBeginColumn(),
+				cnId, new ExceptionExpr(thStmt.getBeginLine(), thStmt.getBeginColumn(),
 						thStmt.getEndLine(), thStmt.getEndColumn(), exceptionExp));
 		cfg.addEntryNode(cfgNode);
 		cfg.addReturnNode(cfgNode);

@@ -13,6 +13,7 @@ import japa.parser.ast.expr.NameExpr;
 import japa.parser.ast.expr.VariableDeclarationExpr;
 import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.codeparser.ExpressionParser;
+import staticanalysis.codeparser.javaparserextend.ExceptionExpr;
 import staticanalysis.datastructures.controlflowgraph.CFGGraph;
 import staticanalysis.datastructures.controlflowgraph.CFGNode;
 import util.commonfunc.StringOperations;
@@ -87,14 +88,8 @@ public class CodePath {
 	 * @return true, if is execute query method call expression
 	 */
 	private boolean isAbortMethodCallExpression(Expression exp) {
-		if (ExpressionParser.isMethodCallExpression(exp)) {
-			MethodCallExpr methodCallExpr = (MethodCallExpr) exp;
-			if (methodCallExpr.getName().equals("Exception") ||
-					methodCallExpr.getName().equals("Abort") ) {
-				return true;
-			} else {
-				return false;
-			}
+		if (exp instanceof ExceptionExpr) {
+			return true;
 		} else {
 			return false;
 		}
