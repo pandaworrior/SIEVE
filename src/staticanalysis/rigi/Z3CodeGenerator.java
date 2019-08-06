@@ -20,6 +20,7 @@ import staticanalysis.pathanalyzer.PathAnalyzer;
  * 
  * TODO list
  * 	1. we first parse a project and get all paths
+ *     -> Done
  *  2. we eliminate paths that either contain abort or do not contain any update statement
  *  3. we create specifications for database tables
  *  4. we gather all select queries and translate into Z3 code, create a dict for it
