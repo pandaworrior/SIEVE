@@ -214,6 +214,11 @@
 	  	                        <attribute name="Main-Class" value="staticanalysis.z3codegen.CodeGenerator" />
 	  	                    </manifest>
 	  	                </jar>
+	  	<jar jarfile="${dist.dir}\z3CodeGen.jar" basedir="${build.dir}/classes">
+	  	                    <manifest>
+	  	                        <attribute name="Main-Class" value="staticanalysis.rigi.Z3CodeGenerator" />
+	  	                    </manifest>
+	  	                </jar>
 	  </target>
 	
 	  <!-- Construct the One-JAR file -->   
@@ -543,6 +548,27 @@
 	  			  		</fileset>
 	  			  	</lib>
 	  			   </one-jar>
+		<one-jar destfile="${exec.dir}/z3CodeGen-big.jar">
+		  			  	<main jar="${dist.dir}/z3CodeGen.jar"/>
+		  			  	 <lib>
+		  			  		<fileset dir="${lib.dir}">
+		  			  		    <include name="javaparser-1.0.8.jar"/>
+		  			  		    <include name="**/commons-io-2.4.jar"/>
+		  			  			<include name="**/jsqlparser.jar"/>
+		  				      	<include name="**/org.eclipse.core.contenttype_3.4.0.v20090429-1800.jar"/>
+		  				      	<include name="**/org.eclipse.core.jobs-3.5.0.v20100515.jar"/>
+		  				      	<include name="**/org.eclipse.core.resources_3.5.0.v20090512.jar"/>
+		  				      	<include name="**/org.eclipse.core.runtime_3.5.0.v20090525.jar"/>
+		  				      	<include name="**/org.eclipse.equinox.common-3.6.0.v20100503.jar"/>
+		  				      	<include name="**/org.eclipse.equinox.preferences-3.5.0.v20120522-1841.jar"/>
+		  				      	<include name="**/org.eclipse.jdt.core_3.5.2.v_981_R35x.jar"/>
+		  				      	<include name="**/org.eclipse.osgi_3.6.0.v20100128-1430_NLSONLY.jar"/>
+		  				      	<include name="**/org.eclipse.text_3.5.0.v20100601-1300.jar"/>
+		  				      	<include name="**/org.osgi.core-4.2.0.jar"/>
+		  				      	<include name="**/osgi-service.jar"/>
+		  			  		</fileset>
+		  			  	</lib>
+		  			   </one-jar>
       </target>
 	   	
 	  <!--target name="main" depends="compile, jar, onejar, docs"-->
