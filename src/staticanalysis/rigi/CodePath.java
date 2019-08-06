@@ -26,6 +26,7 @@ public class CodePath {
 	CFGGraph<CodeNodeIdentifier, Expression> pathCfg;
 	List<String> selectQueries;
 	List<String> updateQueries;
+	boolean aborted = false;
 
 	public CodePath(CFGGraph<CodeNodeIdentifier, Expression> cfg) {
 		this.pathCfg = cfg;
@@ -70,6 +71,26 @@ public class CodePath {
 		if (ExpressionParser.isMethodCallExpression(exp)) {
 			MethodCallExpr methodCallExpr = (MethodCallExpr) exp;
 			if (methodCallExpr.getName().equals("executeQuery")) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	/**
+	 * Checks if is abort method call expression.
+	 *
+	 * @param exp the exp
+	 * @return true, if is execute query method call expression
+	 */
+	private boolean isAbortMethodCallExpression(Expression exp) {
+		if (ExpressionParser.isMethodCallExpression(exp)) {
+			MethodCallExpr methodCallExpr = (MethodCallExpr) exp;
+			if (methodCallExpr.getName().equals("Exception") ||
+					methodCallExpr.getName().equals("Abort") ) {
 				return true;
 			} else {
 				return false;
@@ -290,9 +311,9 @@ public class CodePath {
 	}
 
 	/**
-	 * Find all sql statements
+	 * Find all sql statements and aborts
 	 */
-	public void findAllSqlStatments() {
+	public void findAllSqlStatmentsAndAborts() {
 		// identify a function call executeUpdate
 		List<CFGNode<CodeNodeIdentifier, Expression>> nodeList = this.pathCfg.getNodeListViaBFS();
 		List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList = new ArrayList<CFGNode<CodeNodeIdentifier, Expression>>();
@@ -313,12 +334,16 @@ public class CodePath {
 					//System.out.println("I found a string: " + e);
 					this.addOneSelectQuery(e);
 				}
+			}else if(this.isAbortMethodCallExpression(expr)) {
+				System.out.println("I found an abort or exception string: ");
+				this.aborted = true;
+				break;
 			}
 		}
 	}
 
 	public boolean isReadOnly() {
-		return this.updateQueries.isEmpty();
+		return (this.aborted || this.updateQueries.isEmpty());
 	}
 	
 	public void printOut() {

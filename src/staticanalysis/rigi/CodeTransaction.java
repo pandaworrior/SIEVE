@@ -29,7 +29,7 @@ public class CodeTransaction {
 		while(pathIt.hasNext()) {
 			CFGGraph<CodeNodeIdentifier, Expression>  cfg = pathIt.next();
 			CodePath cPath = new CodePath(cfg);
-			cPath.findAllSqlStatments();
+			cPath.findAllSqlStatmentsAndAborts();
 			this.codePaths.add(cPath);
 		}
 		this.eliminatePaths();

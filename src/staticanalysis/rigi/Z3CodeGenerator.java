@@ -24,7 +24,7 @@ import staticanalysis.pathanalyzer.PathAnalyzer;
  *     1.1 get all update queries per path
  *        -> Done
  *     1.2 get all select queries per path
- *        -> In progress
+ *        -> Done
  *  2. we eliminate paths that either contain abort or do not contain any update statement
  *     -> Done
  *  3. we create specifications for database tables
