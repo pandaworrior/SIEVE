@@ -1,5 +1,6 @@
 package staticanalysis.rigi;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -19,7 +20,7 @@ import staticanalysis.pathanalyzer.PathAnalyzer;
  * 
  * TODO list
  * 	1. we first parse a project and get all paths
- *  2. we eliminate paths that do not contain any update statement
+ *  2. we eliminate paths that either contain abort or do not contain any update statement
  *  3. we create specifications for database tables
  *  4. we gather all select queries and translate into Z3 code, create a dict for it
  *  5. we gather all update queries and translate into Z3 code, create a dict for it
@@ -43,6 +44,9 @@ public class Z3CodeGenerator {
 	
 	/** Tell which set of transactions that we have to analyze*/
 	String filterFile;
+	
+	/** The list of transaction code*/
+	List<CodeTransaction> txnCodeList;
 	
     private void parseProject() {
 		
@@ -75,10 +79,20 @@ public class Z3CodeGenerator {
 			ReducedPathAbstractionSet rPathAbSet = itEntry.getValue();
 			String txnName = cfg.getCfgIdentifier().getShortName();
 			List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList = PathAnalyzer.obtainAllReducedControlFlowGraphs(cfg, rPathAbSet);
-			System.out.println("txnName" + txnName + "; reduced cfg list size " + reducedCfgList.size());
+			CodeTransaction codeTxn = new CodeTransaction(txnName, reducedCfgList);
+			this.txnCodeList.add(codeTxn);
+			codeTxn.printInShort();
 		}
 		
 	}
+    
+    /**
+     * \brief eliminate txn if it is read-only or
+     *        paths if it is read-only or aborting
+     */
+    private void eliminateTxnOrPaths() {
+    	
+    }
 	
 	/**
 	 * \brief Create an instance of CodeGenerator
@@ -89,8 +103,9 @@ public class Z3CodeGenerator {
 	 */
 	public Z3CodeGenerator(String pName, String pPath, String fFile)
 	{
-		this.pjsParser = new ProjectParser(pName, pPath);
+		this.pjsParser = new ProjectParser(pPath, pName);
 		PathAnalyzer.addFunctionMustBeProcessedListFromFile(fFile);
+		this.txnCodeList = new ArrayList<CodeTransaction>();
 	}
 	
 	/**
@@ -99,6 +114,7 @@ public class Z3CodeGenerator {
 	
 	public void generateCode() {
 		this.parseProject();
+		this.eliminateTxnOrPaths();
 	}
 	
 	
@@ -116,8 +132,8 @@ public class Z3CodeGenerator {
 		}
 		
 		String projectName = args[0];
-		String pjPath = args[3];
-		String ffPath = args[4];
+		String pjPath = args[1];
+		String ffPath = args[2];
 		Z3CodeGenerator codeGen = new Z3CodeGenerator(projectName, pjPath, ffPath);
 		codeGen.generateCode();
 	}
