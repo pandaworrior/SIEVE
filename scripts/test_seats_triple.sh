@@ -1,0 +1,1 @@
+ java -jar dist/exec/codeGen-big.jar seats_triple ../explicit_tradeoff/code/z3/code_seats_triple/schema.sql ../explicit_tradeoff/code/z3/code_seats_triple/query.sql ../explicit_tradeoff/code/z3/code_seats_triple/procedures/ ../explicit_tradeoff/code/z3/code_seats_triple/transactionMustBeAnalyzed.txt 

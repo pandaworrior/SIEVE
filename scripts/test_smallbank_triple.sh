@@ -1,0 +1,1 @@
+ java -jar dist/exec/codeGen-big.jar smallbank_triple ../explicit_tradeoff/code/z3/code_small_bank_triple/schema.sql ../explicit_tradeoff/code/z3/code_small_bank_triple/query.sql ../explicit_tradeoff/code/z3/code_small_bank_triple/procedures/ ../explicit_tradeoff/code/z3/code_small_bank_triple/transactionMustBeAnalyzed.txt 
