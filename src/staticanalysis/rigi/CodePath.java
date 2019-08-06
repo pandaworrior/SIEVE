@@ -180,13 +180,13 @@ public class CodePath {
 	}
 
 	/**
-	 * Gets the update sql statement from prepare statement.
+	 * Gets the sql statement from prepare statement.
 	 *
 	 * @param precedingNodeList the preceding node list
 	 * @param preStat           the pre stat
-	 * @return the update sql statement from prepare statement
+	 * @return the sql statement from prepare statement
 	 */
-	private String getUpdateSqlStatementFromPrepareStatement(
+	private String getSqlStatementFromPrepareStatement(
 			List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList, NameExpr preStat) {
 		int index = precedingNodeList.size() - 1;
 		while (index >= 0) {
@@ -199,7 +199,7 @@ public class CodePath {
 						// you find this
 						Expression value = asExp.getValue();
 						MethodCallExpr preDef = (MethodCallExpr) value;
-						return this.getSqlUpdateStringFromMethodCallExpr(precedingNodeList.subList(0, index), preDef);
+						return this.getSqlStringFromMethodCallExpr(precedingNodeList.subList(0, index), preDef);
 					}
 				}
 			} else if (ExpressionParser.isVariableDeclarationExpr(expr)) {
@@ -214,7 +214,7 @@ public class CodePath {
 							Expression varInit = varDec.getInit();
 							if (varInit instanceof MethodCallExpr) {
 								MethodCallExpr methodCExpr = (MethodCallExpr) varInit;
-								return this.getSqlUpdateStringFromMethodCallExpr(precedingNodeList.subList(0, index),
+								return this.getSqlStringFromMethodCallExpr(precedingNodeList.subList(0, index),
 										methodCExpr);
 							}
 						}
@@ -227,13 +227,13 @@ public class CodePath {
 	}
 
 	/**
-	 * Gets the sql update string from method call expr.
+	 * Gets the sql string from method call expr.
 	 *
 	 * @param precedingNodeList the preceding node list
 	 * @param methodCExpr       the method c expr
-	 * @return the sql update string from method call expr
+	 * @return the sql string from method call expr
 	 */
-	private String getSqlUpdateStringFromMethodCallExpr(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
+	private String getSqlStringFromMethodCallExpr(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
 			MethodCallExpr methodCExpr) {
 		List<Expression> args = methodCExpr.getArgs();
 		assert (args != null);
@@ -257,7 +257,7 @@ public class CodePath {
 	 * @param cfgNode           the cfg node
 	 * @return the string
 	 */
-	private String findSqlUpdatingStatement(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
+	private String findSqlStatementFromContext(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
 			CFGNode<CodeNodeIdentifier, Expression> cfgNode) {
 		// get the argument from the argument of the executeUpdate function
 		MethodCallExpr methodCallExpr = (MethodCallExpr) cfgNode.getNodeData();
@@ -285,46 +285,7 @@ public class CodePath {
 			Expression scope = methodCallExpr.getScope();
 			NameExpr namExpr = this.getNameExpr(scope);
 			// find create preparestatement for this name expression
-			return this.getUpdateSqlStatementFromPrepareStatement(precedingNodeList, namExpr);
-		}
-	}
-	
-	/**
-	 * Find sql selecting statement.
-	 *
-	 * @param precedingNodeList the preceding node list
-	 * @param cfgNode           the cfg node
-	 * @return the string
-	 */
-	private String findSqlSelectingStatement(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
-			CFGNode<CodeNodeIdentifier, Expression> cfgNode) {
-		// get the argument from the argument of the executeUpdate function
-		MethodCallExpr methodCallExpr = (MethodCallExpr) cfgNode.getNodeData();
-		List<Expression> args = methodCallExpr.getArgs();
-		/*
-		 * Fork into two branches: one for connection.execute() one for
-		 * preparestatement.executeUpdate()
-		 */
-		if (args != null) {
-			assert (args.size() == 1);
-			Expression argExpr = args.get(0);
-			// if this argument is a string, then please return this string
-			if (ExpressionParser.isStringLiteralExpression(argExpr)) {
-				return argExpr.toString();
-			} else if (ExpressionParser.isNameExpr(argExpr)) {
-				// if the argument is a variable, please find it along the path back the start
-				// of the function
-				// * find the assignment expression
-				return this.assembleStringForNameExpr(precedingNodeList, (NameExpr) argExpr);
-			} else {
-				System.err.println("This method has not been implemented!");
-				return null;
-			}
-		} else {
-			Expression scope = methodCallExpr.getScope();
-			NameExpr namExpr = this.getNameExpr(scope);
-			// find create preparestatement for this name expression
-			return this.getUpdateSqlStatementFromPrepareStatement(precedingNodeList, namExpr);
+			return this.getSqlStatementFromPrepareStatement(precedingNodeList, namExpr);
 		}
 	}
 
@@ -340,17 +301,17 @@ public class CodePath {
 			Expression expr = cfgNode.getNodeData();
 			if (this.isExecuteUpdateMethodCallExpression(expr)) {
 				Debug.println("Expr: " + expr.toString());
-				String e = this.findSqlUpdatingStatement(precedingNodeList, cfgNode);
+				String e = this.findSqlStatementFromContext(precedingNodeList, cfgNode);
 				if (e != null) {
-					Debug.println("I found a string: " + e);
+					//System.out.println("I found a string: " + e);
 					this.addOneUpdateQuery(e);
 				}
 			}else if(this.isExecuteQueryMethodCallExpression(expr)) {
 				Debug.println("Expr: " + expr.toString());
-				String e = this.findSqlSelectingStatement(precedingNodeList, cfgNode);
+				String e = this.findSqlStatementFromContext(precedingNodeList, cfgNode);
 				if (e != null) {
-					Debug.println("I found a string: " + e);
-					//this.addOneUpdateQuery(e);
+					//System.out.println("I found a string: " + e);
+					this.addOneSelectQuery(e);
 				}
 			}
 		}
@@ -358,6 +319,17 @@ public class CodePath {
 
 	public boolean isReadOnly() {
 		return this.updateQueries.isEmpty();
+	}
+	
+	public void printOut() {
+		System.out.println("------------>Code Path------------>");
+		for(int i = 0 ; i < this.selectQueries.size(); i++) {
+			System.out.println("Select: " + this.selectQueries.get(i));
+		}
+		for(int i = 0 ; i < this.updateQueries.size(); i++) {
+			System.out.println("Update: " + this.updateQueries.get(i));
+		}
+		System.out.println("<------------Code Path<------------");
 	}
 
 }

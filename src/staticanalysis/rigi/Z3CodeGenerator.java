@@ -87,7 +87,7 @@ public class Z3CodeGenerator {
 			List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList = PathAnalyzer.obtainAllReducedControlFlowGraphs(cfg, rPathAbSet);
 			CodeTransaction codeTxn = new CodeTransaction(txnName, reducedCfgList);
 			this.txnCodeList.add(codeTxn);
-			codeTxn.printInShort();
+			codeTxn.printInDetails();
 		}
 		
 	}
