@@ -320,7 +320,15 @@ public class CodePath {
 			if(expr == null) {
 				System.out.println("Expr: null probably it is return");
 			}else {
-				System.out.println("Expr: " + expr.toString());
+				if(cfgNode.isCondExpr()) {
+					if(cfgNode.isIfPath()) {
+						System.out.println("Branch boolean expr: " + expr.toString());
+					}else {
+						System.out.println("Branch boolean expr: not (" + expr.toString() + ")");
+					}
+				}else {
+					System.out.println("Expr: " + expr.toString());
+				}
 			}
 			if (this.isExecuteUpdateMethodCallExpression(expr)) {
 				Debug.println("Expr: " + expr.toString());
@@ -337,7 +345,7 @@ public class CodePath {
 					this.addOneSelectQuery(e);
 				}
 			}else if(this.isAbortMethodCallExpression(expr)) {
-				System.out.println("I found an abort or exception string: ");
+				//System.out.println("I found an abort or exception string: ");
 				this.aborted = true;
 				break;
 			}

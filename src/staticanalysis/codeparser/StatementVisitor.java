@@ -25,6 +25,7 @@ import staticanalysis.datastructures.controlflowgraph.CFGGraph;
 import staticanalysis.datastructures.controlflowgraph.CFGNode;
 import util.debug.Debug;
 import japa.parser.ast.expr.Expression;
+import japa.parser.ast.expr.NameExpr;
 import japa.parser.ast.stmt.BlockStmt;
 import japa.parser.ast.stmt.BreakStmt;
 import japa.parser.ast.stmt.CatchClause;
@@ -68,7 +69,7 @@ public class StatementVisitor
 	 *            the method identifier
 	 * @return the cFG graph
 	 */
-	public CFGGraph<CodeNodeIdentifier, Expression> visit(IfStmt ifStmt,
+	/*public CFGGraph<CodeNodeIdentifier, Expression> visit(IfStmt ifStmt,
 			MethodIdentifier methodId) {
 		boolean isElseEmpty = false;
 		Expression conditionExpr = ifStmt.getCondition();
@@ -115,7 +116,7 @@ public class StatementVisitor
 			subCfg.addEntryNode(elseCfgNode);
 			subCfg.addExitNode(elseCfgNode);
 			subCfgList.add(subCfg);*/
-			isElseEmpty = true;
+			/*isElseEmpty = true;
 		}
 		if (!subCfgList.isEmpty()) {
 			cfg.mergeWithOtherControlFlowGraphs(subCfgList);
@@ -125,6 +126,106 @@ public class StatementVisitor
 			//make the compare condition to exit node as well
 			cfg.addExitNode(cfgNode);
 		}
+		return cfg;
+	}*/
+	
+	/**
+	 * Obtain control flow graph for if statement Recursively analyze both if
+	 * and else part Generate a control flow graph with a node that is the
+	 * condition expression. Link this graph to two sub graphs from if and else.
+	 * 
+	 * @param ifStmt
+	 *            the if statement
+	 * @param methodId
+	 *            the method identifier
+	 * @return the cFG graph
+	 */
+	public CFGGraph<CodeNodeIdentifier, Expression> visit(IfStmt ifStmt,
+			MethodIdentifier methodId) {
+		
+		// create a new cfg
+		CFGGraph<CodeNodeIdentifier, Expression> cfg = new CFGGraph<CodeNodeIdentifier, Expression>();
+		
+		
+		// first create an entry node with placeholder
+		Expression entranceExpr = new NameExpr(ifStmt.getBeginLine(),
+				ifStmt.getBeginColumn(), ifStmt.getBeginLine(),
+				ifStmt.getEndColumn(), "GhostNode");
+		
+		CodeNodeIdentifier cnId = new CodeNodeIdentifier(
+				methodId.getPackageName(), methodId.getClassName(),
+				methodId.getMethodName(), ifStmt.getBeginLine(),
+				ifStmt.getBeginColumn(), ifStmt.getBeginLine(),
+				ifStmt.getEndColumn());
+		
+		CFGNode<CodeNodeIdentifier, Expression> cfgNode = new CFGNode<CodeNodeIdentifier, Expression>(
+				cnId, entranceExpr);
+		cfg.addEntryNode(cfgNode);
+		cfg.addExitNode(cfgNode);
+
+		List<CFGGraph<CodeNodeIdentifier, Expression>> subCfgList = new ArrayList<CFGGraph<CodeNodeIdentifier, Expression>>();
+		
+		Expression conditionExpr = ifStmt.getCondition();
+		Statement st = ifStmt.getThenStmt();
+		
+		//create if subgraph
+		CFGGraph<CodeNodeIdentifier, Expression> subCfg = new CFGGraph<CodeNodeIdentifier, Expression>();
+		CFGNode<CodeNodeIdentifier, Expression> ifNode = new CFGNode<CodeNodeIdentifier, Expression>(
+				cnId, conditionExpr);
+		ifNode.setIfPath();
+		subCfg.addEntryNode(ifNode);
+		subCfg.addExitNode(ifNode);
+		
+		if (st != null) {
+			Debug.println("then statement: " + st.toString());
+			subCfg.mergeWithOtherControlFlowGraph(StatementParser
+					.dispatchToStatementVisitor(st, methodId));
+		}
+		subCfgList.add(subCfg);
+		
+		//create else subgraph
+		st = ifStmt.getElseStmt();
+		CFGGraph<CodeNodeIdentifier, Expression> subCfg1 = new CFGGraph<CodeNodeIdentifier, Expression>();
+		CFGNode<CodeNodeIdentifier, Expression> elseNode = new CFGNode<CodeNodeIdentifier, Expression>(
+				cnId, conditionExpr);
+		elseNode.setElsePath();
+		subCfg1.addEntryNode(elseNode);
+		subCfg1.addExitNode(elseNode);
+		
+		if (st != null) {
+			Debug.println("else statement: " + st.toString());
+			subCfg1.mergeWithOtherControlFlowGraph(StatementParser
+					.dispatchToStatementVisitor(st, methodId));
+		} 
+		
+		subCfgList.add(subCfg1);
+		
+		if (!subCfgList.isEmpty()) {
+			cfg.mergeWithOtherControlFlowGraphs(subCfgList);
+		}
+		
+		// create a new cfg
+		CFGGraph<CodeNodeIdentifier, Expression> cfg1 = new CFGGraph<CodeNodeIdentifier, Expression>();
+		
+		// at the end create an exit node with placeholder
+		Expression exitExpr = new NameExpr(ifStmt.getEndLine(),
+						ifStmt.getBeginColumn(), ifStmt.getEndLine(),
+						ifStmt.getEndColumn(), "GhostNode");
+		
+		CodeNodeIdentifier cnId1 = new CodeNodeIdentifier(
+				methodId.getPackageName(), methodId.getClassName(),
+				methodId.getMethodName(), ifStmt.getEndLine(),
+				ifStmt.getBeginColumn(), ifStmt.getEndLine(),
+				ifStmt.getEndColumn());
+		
+		CFGNode<CodeNodeIdentifier, Expression> cfgNode1 = new CFGNode<CodeNodeIdentifier, Expression>(
+				cnId1, exitExpr);
+		cfg1.addEntryNode(cfgNode1);
+		cfg1.addExitNode(cfgNode1);
+		
+		cfg.mergeWithOtherControlFlowGraph(cfg1);
+		
+		//cfg.printOut();
 		return cfg;
 	}
 	

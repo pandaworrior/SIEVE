@@ -51,6 +51,16 @@ public class CFGNode<T1, T2> {
 	
 	/** The is return node. */
 	private boolean isReturnNode;
+	
+	
+	/** This is a conditional expression*/
+	private boolean isConditionalExpr = false;
+	
+	/** This a if path */
+	private boolean isIfPath = false;
+	
+	/** This is an else path*/
+	private boolean isElsePath = false;
 
 	/**
 	 * Instantiates a new cFG node.
@@ -263,6 +273,16 @@ public class CFGNode<T1, T2> {
 		if(this.isReturnNode()) {
 			str += "return ";
 		}
+		
+		if(this.isConditionalExpr) {
+			str += "branch ";
+		}
+		if(this.isIfPath) {
+			str += "If ";
+		}
+		if(this.isElsePath) {
+			str += "Else ";
+		}
 		if (nodeData == null) {
 			str += "empty";
 		} else {
@@ -285,6 +305,16 @@ public class CFGNode<T1, T2> {
 	public CFGNode<T1, T2> cfgNodeClone(){
 		CFGNode<T1, T2> cfgNode = new CFGNode<T1, T2>(this.getNodeId(), this.getNodeData());
 		cfgNode.setSequenceId(this.getSequenceId());
+		if(this.isConditionalExpr) {
+			if(this.isIfPath) {
+				cfgNode.setIfPath();
+			}else if(this.isElsePath) {
+				cfgNode.setElsePath();
+			}else {
+				System.out.println("no more than if and else");
+				System.exit(-1);
+			}
+		}
 		return cfgNode;
 	}
 	
@@ -331,6 +361,28 @@ public class CFGNode<T1, T2> {
 	 */
 	public int getSequenceId() {
 		return sequenceId;
+	}
+	
+	public boolean isCondExpr() {
+		return this.isConditionalExpr;
+	}
+	
+	public boolean isIfPath() {
+		return this.isIfPath;
+	}
+	
+	public boolean isElsePath() {
+		return this.isElsePath;
+	}
+	
+	public void setIfPath() {
+		this.isConditionalExpr = true;
+		this.isIfPath = true;
+	}
+	
+	public void setElsePath() {
+		this.isConditionalExpr = true;
+		this.isElsePath = true;
 	}
 
 }

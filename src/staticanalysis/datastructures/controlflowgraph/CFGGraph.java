@@ -633,6 +633,10 @@ public class CFGGraph<T1, T2> {
 	 *            the cfg
 	 */
 	public void mergeWithOtherControlFlowGraph(CFGGraph<T1, T2> cfg) {		
+		
+		if(cfg == null) {
+			return;
+		}
 		// take all non-exit leafs
 		List<CFGNode<T1, T2>> enNodeList = cfg.getEntryNodeList();
 		assert(cfg.getEntryNodeList() != null && cfg.getEntryNodeList().size() > 0);
@@ -672,6 +676,9 @@ public class CFGGraph<T1, T2> {
 	 *            the cfg list
 	 */
 	public void mergeWithOtherControlFlowGraphs(List<CFGGraph<T1, T2>> cfgList) {
+		
+		if(cfgList == null)
+			return;
 		// take all non-exit leafs
 		List<CFGNode<T1, T2>> etNodeList = this.getExitNodeList();
 		for (CFGNode<T1, T2> cfgNode : etNodeList) {
