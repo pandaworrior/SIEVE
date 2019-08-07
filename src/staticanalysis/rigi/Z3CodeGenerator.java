@@ -21,16 +21,20 @@ import staticanalysis.pathanalyzer.PathAnalyzer;
  * TODO list
  * 	1. we first parse a project and get all paths
  *     -> Done
+ *     1.0 remove all redundant paths
+ *        -> Partially done, we can eliminate later (only for DeleteReservation)
  *     1.1 get all update queries per path
  *        -> Done
  *     1.2 get all select queries per path
  *        -> Done
+ *        -> Why there are some select queries are discarded?
  *  2. we eliminate paths that either contain abort or do not contain any update statement
  *     -> Done
  *  3. we create specifications for database tables
  *  4. we gather all select queries and translate into Z3 code, create a dict for it
  *  5. we gather all update queries and translate into Z3 code, create a dict for it
  *  6. for each path, we gather path condition
+ *     -> Aug 7th
  *  7. for each path, we translate side effects
  *  8. the rest of code required by Rigi
  * @author cheng
@@ -70,7 +74,7 @@ public class Z3CodeGenerator {
 		HashMap<CFGGraph<CodeNodeIdentifier, Expression>, PathAbstraction> pathAbMap = PathAbstractionCreator
 				.obtainAllPathAbstractionForWholeProject(pjsParser.getMethodCfgMapping());
 				
-		//PathAbstractionCreator.printOutPathAbstractions(pathAbMap);
+		PathAbstractionCreator.printOutPathAbstractions(pathAbMap);
 				
 				
 		HashMap<CFGGraph<CodeNodeIdentifier, Expression>, ReducedPathAbstractionSet> cfgPathAbMapping = 
@@ -91,14 +95,6 @@ public class Z3CodeGenerator {
 		}
 		
 	}
-    
-    /**
-     * \brief eliminate txn if it is read-only or
-     *        paths if it is read-only or aborting
-     */
-    private void eliminateTxnOrPaths() {
-    	
-    }
 	
 	/**
 	 * \brief Create an instance of CodeGenerator
@@ -120,7 +116,6 @@ public class Z3CodeGenerator {
 	
 	public void generateCode() {
 		this.parseProject();
-		this.eliminateTxnOrPaths();
 	}
 	
 	
@@ -142,6 +137,9 @@ public class Z3CodeGenerator {
 		String ffPath = args[2];
 		Z3CodeGenerator codeGen = new Z3CodeGenerator(projectName, pjPath, ffPath);
 		codeGen.generateCode();
+		
+		
+		
 	}
 	
 

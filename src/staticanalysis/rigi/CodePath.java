@@ -309,12 +309,19 @@ public class CodePath {
 	 * Find all sql statements and aborts
 	 */
 	public void findAllSqlStatmentsAndAborts() {
-		// identify a function call executeUpdate
+		System.out.println("------------>Analyze Path Starts------------>");
 		List<CFGNode<CodeNodeIdentifier, Expression>> nodeList = this.pathCfg.getNodeListViaBFS();
 		List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList = new ArrayList<CFGNode<CodeNodeIdentifier, Expression>>();
 		for (CFGNode<CodeNodeIdentifier, Expression> cfgNode : nodeList) {
 			precedingNodeList.add(cfgNode);
 			Expression expr = cfgNode.getNodeData();
+			
+			
+			if(expr == null) {
+				System.out.println("Expr: null probably it is return");
+			}else {
+				System.out.println("Expr: " + expr.toString());
+			}
 			if (this.isExecuteUpdateMethodCallExpression(expr)) {
 				Debug.println("Expr: " + expr.toString());
 				String e = this.findSqlStatementFromContext(precedingNodeList, cfgNode);
@@ -335,6 +342,7 @@ public class CodePath {
 				break;
 			}
 		}
+		System.out.println("<------------Analyze Path Ends<------------");
 	}
 
 	public boolean isReadOnly() {
