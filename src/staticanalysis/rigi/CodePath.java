@@ -354,6 +354,7 @@ public class CodePath {
 		}
 		
 		sqlStr = CommonDef.trimQuotes(sqlStr);
+		System.out.println("Trim after " + sqlStr);
 		return sqlStr;
 	}
 
@@ -589,6 +590,7 @@ public class CodePath {
 				if (this.isExecuteUpdateMethodCallExpression(expr)) {
 					Debug.println("Expr: " + expr.toString());
 					String e = this.findSqlStatementFromContext(precedingNodeList, cfgNode);
+					System.out.println("Found : " + e);
 					//process this update query
 					this.processUpdatingQuery(e, precedingNodeList);
 				}else if(this.isExecuteQueryMethodCallExpression(expr)) {

@@ -59,7 +59,7 @@ public class TableSpecs {
 	private List<String> addAttrSpecs(){
 		List<String> attrSpec = new ArrayList<String>();
 		for(DataField df : this.dbTable.getDataFieldList()) {
-			if(df.is_Primary_Key() || df.get_Data_Field_Name().contains("_SP_lock") ||
+			if(df.is_Primary_Key() || df.get_Data_Field_Name().contains("_SP_clock") ||
 					df.get_Data_Field_Name().contains("_SP_ts") ||
 					df.get_Data_Field_Name().contains("_SP_del")) {
 				continue;

@@ -36,6 +36,10 @@ public class CommonDef {
 	}
 	
 	static String trimQuotes(String _str) {
-		return _str.substring(_str.indexOf('\"') + 1, _str.lastIndexOf('\"'));
+		System.out.println("Trim before " + _str);
+		if(_str.indexOf('\"') != -1 && _str.lastIndexOf('\"') != -1)
+			return _str.substring(_str.indexOf('\"') + 1, _str.lastIndexOf('\"'));
+		else
+			return _str;
 	}
 }
