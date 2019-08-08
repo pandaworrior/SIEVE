@@ -15,9 +15,13 @@ public class PathCondition {
 		this.condList.add(cond);
 	}
 	
-	public List<String> genPathCondSpec(){
+	public List<String> genPathCondSpec(int pathIndex){
 		List<String> condSpecs = new ArrayList<String>();
-		String returnStr = "return ";
+		
+		String defStr = "def cond" + pathIndex + CommonDef.funcParamStr;
+		condSpecs.add(defStr);
+		
+		String returnStr = CommonDef.indentStr + "return ";
 		if(this.condList.isEmpty()) {
 			returnStr += "True";
 		}else {

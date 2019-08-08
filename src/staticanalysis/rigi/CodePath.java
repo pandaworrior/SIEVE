@@ -363,8 +363,27 @@ public class CodePath {
 		System.out.println("<------------Analyze Path Ends<------------");
 	}
 	
-	public List<String> genCodePathSpec(){
+	private List<String> genSideEffectSpecs(int pathIndex) {
+		List<String> sEffectSpecs = new ArrayList<String>();
+		
+		String defStr = "def sop" + pathIndex + CommonDef.funcParamStr;
+		sEffectSpecs.add(defStr);
+		
+		//TODO: translate here
+		
+		sEffectSpecs.add(CommonDef.indentStr + "return state");
+		return sEffectSpecs;
+	}
+	
+	public List<String> genCodePathSpec(int pathIndex){
 		List<String> codePathSpecs = new ArrayList<String>();
+		codePathSpecs.addAll(this.pCond.genPathCondSpec(pathIndex));
+		codePathSpecs.add("\n");
+		
+		codePathSpecs.addAll(this.rCond.genReplicationCondSpec(pathIndex));
+		codePathSpecs.add("\n");
+		
+		codePathSpecs.addAll(this.genSideEffectSpecs(pathIndex));
 		return codePathSpecs;
 	}
 

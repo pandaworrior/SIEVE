@@ -15,9 +15,13 @@ public class ReplicationCondition {
 		this.condList.add(cond);
 	}
 	
-	public List<String> genReplicationCondSpec(){
+	public List<String> genReplicationCondSpec(int pathIndex){
 		List<String> condSpecs = new ArrayList<String>();
-		String returnStr = "return ";
+		
+		String defStr = "def csop" + pathIndex + CommonDef.funcParamStr;
+		condSpecs.add(defStr);
+		
+		String returnStr = CommonDef.indentStr + "return ";
 		if(this.condList.isEmpty()) {
 			returnStr += "True";
 		}else {

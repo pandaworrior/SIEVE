@@ -67,17 +67,23 @@ public class CodeTransaction {
 		String initBodyStr = CommonDef.indentStr + CommonDef.indentStr + "self.ops = [";
 		for(int i = 0; i < this.codePaths.size(); i++) {
 			String pathTempStr = "(";
-			CodePath cPath = this.codePaths.get(i);
-			pathTempStr += "self.cond" + i + ", self.csop" + i + ", self.sop1" + i + "),";
+			pathTempStr += "self.cond" + i + ", self.csop" + i + ", self.sop" + i + "),";
 			initBodyStr += pathTempStr;
 		}
 		
 		if(initBodyStr.endsWith(",")) {
 			initBodyStr = initBodyStr.substring(0, initBodyStr.length() - 1);
 		}
-		txnSpecs.add(initBodyStr);
+		txnSpecs.add(initBodyStr + "\n");
 		
 		//add code for path
+		for(int i = 0; i < this.codePaths.size(); i++) {
+			List<String> pathSpecs = this.codePaths.get(i).genCodePathSpec(i);
+			for(String entry : pathSpecs) {
+				txnSpecs.add(CommonDef.indentStr + entry);
+			}
+			txnSpecs.add("\n");
+		}
 		return txnSpecs;
 	}
 	
