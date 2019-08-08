@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import japa.parser.ast.expr.Expression;
+import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.codeparser.ProjectParser;
 import staticanalysis.datastructures.controlflowgraph.CFGGraph;
@@ -75,7 +76,8 @@ public class Z3CodeGenerator {
 	/** The database specs */
 	DatabaseSpec dbSpec;
 	
-	
+	/** The sql parser*/
+	static CCJSqlParserManager cJsqlParser;
 	
     private void parseProject() {
 		
@@ -108,7 +110,7 @@ public class Z3CodeGenerator {
 			ReducedPathAbstractionSet rPathAbSet = itEntry.getValue();
 			String txnName = cfg.getCfgIdentifier().getShortName();
 			List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList = PathAnalyzer.obtainAllReducedControlFlowGraphs(cfg, rPathAbSet);
-			CodeTransaction codeTxn = new CodeTransaction(txnName, reducedCfgList);
+			CodeTransaction codeTxn = new CodeTransaction(txnName, reducedCfgList, this.dbSpec.dbSchemaParser);
 			if(!codeTxn.codePaths.isEmpty()) {
 				this.txnCodeList.add(codeTxn);
 			}
@@ -128,6 +130,9 @@ public class Z3CodeGenerator {
 	public Z3CodeGenerator(String pName, String pPath, String fFile, String sfPath)
 	{
 		this.pjName = pName;
+		//create sql parser
+		cJsqlParser = new CCJSqlParserManager();
+		
 		this.conWriter = new ContentWriter(pName);
 		this.pjsParser = new ProjectParser(pPath, pName);
 		PathAnalyzer.addFunctionMustBeProcessedListFromFile(fFile);
@@ -250,9 +255,6 @@ public class Z3CodeGenerator {
 		String sfPath = args[3];
 		Z3CodeGenerator codeGen = new Z3CodeGenerator(projectName, pjPath, ffPath, sfPath);
 		codeGen.generateCode();
-		
-		
-		
 	}
 	
 

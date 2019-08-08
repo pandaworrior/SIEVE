@@ -1,12 +1,16 @@
 package staticanalysis.rigi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
 import japa.parser.ast.expr.Expression;
 import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.datastructures.controlflowgraph.CFGGraph;
+import util.annotationparser.SchemaParser;
+import util.crdtlib.dbannotationtypes.dbutil.DataField;
 
 /**
  * This class is used to represent transaction code
@@ -21,14 +25,19 @@ public class CodeTransaction {
 	List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList;
 	List<CodePath> codePaths;
 	
-	public CodeTransaction(String tName, List<CFGGraph<CodeNodeIdentifier, Expression>> rList) {
+	/** The DB Schema Parser. */
+	SchemaParser dbSchemaParser;
+	
+	public CodeTransaction(String tName, List<CFGGraph<CodeNodeIdentifier, Expression>> rList,
+			SchemaParser _sp) {
 		this.txnName = tName;
 		this.reducedCfgList = rList;
 		this.codePaths = new ArrayList<CodePath>();
+		this.dbSchemaParser = _sp;
 		Iterator<CFGGraph<CodeNodeIdentifier, Expression>> pathIt = this.reducedCfgList.iterator();
 		while(pathIt.hasNext()) {
 			CFGGraph<CodeNodeIdentifier, Expression>  cfg = pathIt.next();
-			CodePath cPath = new CodePath(cfg);
+			CodePath cPath = new CodePath(cfg, this.dbSchemaParser);
 			cPath.findAllSqlStatmentsAndAborts();
 			this.codePaths.add(cPath);
 		}
@@ -53,8 +62,15 @@ public class CodeTransaction {
 		List<String> argvSpecs = new ArrayList<String>();
 		argvSpecs.add("builder.NewOp(\'" + this.txnName + "\')");
 		
-		//TODO: complete all arguments
-		
+		for(CodePath cP : this.codePaths) {
+			HashMap<String, DataField> argvMap = cP.getArgvMap();
+			Iterator<Entry<String, DataField>> argvIt = argvMap.entrySet().iterator();
+			while(argvIt.hasNext()) {
+				Entry<String, DataField> argvEntry = argvIt.next();
+				String typeStr = CommonDef.getArgvBuilderType(argvEntry.getValue());
+				argvSpecs.add("builder.AddArgv(\'" + argvEntry.getKey() + "\'," + typeStr + ")");
+			}
+		}
 		return argvSpecs;
 	}
 	

@@ -1,6 +1,9 @@
 package staticanalysis.rigi;
 
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import japa.parser.ast.body.VariableDeclarator;
@@ -11,12 +14,18 @@ import japa.parser.ast.expr.Expression;
 import japa.parser.ast.expr.MethodCallExpr;
 import japa.parser.ast.expr.NameExpr;
 import japa.parser.ast.expr.VariableDeclarationExpr;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
 import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.codeparser.ExpressionParser;
 import staticanalysis.codeparser.javaparserextend.ExceptionExpr;
 import staticanalysis.datastructures.controlflowgraph.CFGGraph;
 import staticanalysis.datastructures.controlflowgraph.CFGNode;
+import staticanalysis.z3codegen.QueryParser;
+import util.annotationparser.SchemaParser;
 import util.commonfunc.StringOperations;
+import util.crdtlib.dbannotationtypes.dbutil.DataField;
 import util.debug.Debug;
 
 /**
@@ -35,14 +44,25 @@ public class CodePath {
 	ReplicationCondition rCond;
 	
 	List<Axiom> axioms;
+	
+	/** arguments */
+	HashMap<String, DataField> argvsMap;
+	
+	private boolean isArgvProcessed = false;
+	
+	/** The DB Schema Parser. */
+	SchemaParser dbSchemaParser;
 
-	public CodePath(CFGGraph<CodeNodeIdentifier, Expression> cfg) {
+	public CodePath(CFGGraph<CodeNodeIdentifier, Expression> cfg,
+			SchemaParser _sp) {
 		this.pathCfg = cfg;
 		this.selectQueries = new ArrayList<String>();
 		this.updateQueries = new ArrayList<String>();
 		this.pCond = new PathCondition();
 		this.rCond = new ReplicationCondition();
 		this.axioms = new ArrayList<Axiom>();
+		this.argvsMap = new HashMap<String, DataField>();
+		this.dbSchemaParser = _sp;
 	}
 
 	private void addOneSelectQuery(String _str) {
@@ -82,6 +102,19 @@ public class CodePath {
 		if (ExpressionParser.isMethodCallExpression(exp)) {
 			MethodCallExpr methodCallExpr = (MethodCallExpr) exp;
 			if (methodCallExpr.getName().equals("executeQuery")) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	private boolean isSetParamMethodCallExpression(Expression exp) {
+		if (ExpressionParser.isMethodCallExpression(exp)) {
+			MethodCallExpr methodCallExpr = (MethodCallExpr) exp;
+			if (methodCallExpr.getName().contains("set")) {
 				return true;
 			} else {
 				return false;
@@ -288,6 +321,8 @@ public class CodePath {
 		// get the argument from the argument of the executeUpdate function
 		MethodCallExpr methodCallExpr = (MethodCallExpr) cfgNode.getNodeData();
 		List<Expression> args = methodCallExpr.getArgs();
+		
+		String sqlStr = "";
 		/*
 		 * Fork into two branches: one for connection.execute() one for
 		 * preparestatement.executeUpdate()
@@ -297,12 +332,12 @@ public class CodePath {
 			Expression argExpr = args.get(0);
 			// if this argument is a string, then please return this string
 			if (ExpressionParser.isStringLiteralExpression(argExpr)) {
-				return argExpr.toString();
+				sqlStr = argExpr.toString();
 			} else if (ExpressionParser.isNameExpr(argExpr)) {
 				// if the argument is a variable, please find it along the path back the start
 				// of the function
 				// * find the assignment expression
-				return this.assembleStringForNameExpr(precedingNodeList, (NameExpr) argExpr);
+				sqlStr = this.assembleStringForNameExpr(precedingNodeList, (NameExpr) argExpr);
 			} else {
 				System.err.println("This method has not been implemented!");
 				return null;
@@ -311,8 +346,11 @@ public class CodePath {
 			Expression scope = methodCallExpr.getScope();
 			NameExpr namExpr = this.getNameExpr(scope);
 			// find create preparestatement for this name expression
-			return this.getSqlStatementFromPrepareStatement(precedingNodeList, namExpr);
+			sqlStr = this.getSqlStatementFromPrepareStatement(precedingNodeList, namExpr);
 		}
+		
+		sqlStr = CommonDef.trimQuotes(sqlStr);
+		return sqlStr;
 	}
 
 	/**
@@ -361,6 +399,133 @@ public class CodePath {
 			}
 		}
 		System.out.println("<------------Analyze Path Ends<------------");
+	}
+	
+	private String getParamForIndex(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
+			int paramIndex) {
+		String paramStr = "";
+		for(int i = precedingNodeList.size() - 1; i >= 0; i--) {
+			Expression expr = precedingNodeList.get(i).getNodeData();
+			if(this.isSetParamMethodCallExpression(expr)) {
+				String methodStr = expr.toString();
+				System.out.println("set " + methodStr);
+				methodStr = methodStr.substring(methodStr.indexOf('(') + 1, methodStr.indexOf(')'));
+				String[] strs = methodStr.split(",");
+				int index = Integer.valueOf(strs[0]);
+				if(index == paramIndex) {
+					paramStr = strs[1].trim();
+					break;
+				}
+			}
+		}
+		
+		return paramStr;
+	}
+	
+	/**
+	 * process select query
+	 * - get all parameters and add into the argv hashmap
+	 * @param sqlQuery
+	 * @param precedingNodeList
+	 */
+	private void processSelectQuery(String sqlQuery, 
+			List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList) {
+		try {
+			//first parse the select query
+			net.sf.jsqlparser.statement.Statement sqlStmt = Z3CodeGenerator.cJsqlParser.parse(new StringReader(sqlQuery));
+		
+			PlainSelect selectStmt = (PlainSelect) ((Select) sqlStmt).getSelectBody();
+			//get the table list TODO: right now assume a single table
+			String tableStr = selectStmt.getFromItem().toString();
+			tableStr.replaceAll(" ", "");
+			String[] tables = tableStr.split(",");
+			
+			//get the primary key and question mark
+			String whereClauseStr = selectStmt.getWhere().toString();
+			
+			String[] subExpressionStrs = null;
+			if(whereClauseStr.contains("AND")) {
+				subExpressionStrs = whereClauseStr.split("AND");
+			}else {
+				subExpressionStrs = whereClauseStr.split("and");
+			}
+			
+			if(subExpressionStrs != null) {
+				//get question mark
+				List<String> questionMarkStrs = new ArrayList<String>();
+				for(int i = 0 ; i < subExpressionStrs.length; i++) {
+					if(subExpressionStrs[i].contains("?")) {
+						String tempStr = subExpressionStrs[i].substring(0, subExpressionStrs[i].lastIndexOf('='));
+						questionMarkStrs.add(tempStr.trim());
+					}
+				}
+				
+				//get back from the precedingNodeList
+				for(int i = 0; i < questionMarkStrs.size(); i++) {
+					String paramStr = this.getParamForIndex(precedingNodeList, i + 1);
+					
+					//find datafield
+					DataField df = this.dbSchemaParser.getTableByName(tables[0]).get_Data_Field(questionMarkStrs.get(i));
+					
+					this.argvsMap.put(paramStr, df);
+				}
+			}
+			
+		} catch (JSQLParserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * process update query
+	 * - get all parameters and add into the argv hashmap
+	 * @param sqlQuery
+	 * @param precedingNodeList
+	 */
+	private void processUpdateQuery(String sqlQuery, 
+			List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList) {
+		
+	}
+	/**
+	 * Traverse the code path
+	 * - get parameters from select
+	 * - get parameters from update
+	 *   - consider two cases
+	 *     - overwrite
+	 *     - binary
+	 */
+	private void processArgvs() {
+		List<CFGNode<CodeNodeIdentifier, Expression>> nodeList = this.pathCfg.getNodeListViaBFS();
+		List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList = new ArrayList<CFGNode<CodeNodeIdentifier, Expression>>();
+		for (CFGNode<CodeNodeIdentifier, Expression> cfgNode : nodeList) {
+			precedingNodeList.add(cfgNode);
+			Expression expr = cfgNode.getNodeData();
+			
+			if(expr != null) {
+				if (this.isExecuteUpdateMethodCallExpression(expr)) {
+					Debug.println("Expr: " + expr.toString());
+					String e = this.findSqlStatementFromContext(precedingNodeList, cfgNode);
+					//process this update query
+					this.processUpdateQuery(e, precedingNodeList);
+				}else if(this.isExecuteQueryMethodCallExpression(expr)) {
+					Debug.println("Expr: " + expr.toString());
+					String e = this.findSqlStatementFromContext(precedingNodeList, cfgNode);
+					//process this select query
+					this.processSelectQuery(e, precedingNodeList);
+				}
+			}
+		}
+	}
+	
+	public HashMap<String, DataField> getArgvMap(){
+		
+		if(!this.isArgvProcessed) {
+			this.processArgvs();
+			this.isArgvProcessed = true;
+		}
+		
+		return this.argvsMap;
 	}
 	
 	private List<String> genSideEffectSpecs(int pathIndex) {
