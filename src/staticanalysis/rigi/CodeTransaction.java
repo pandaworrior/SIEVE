@@ -49,6 +49,15 @@ public class CodeTransaction {
 		}
 	}
 	
+	public List<String> genArgvSpecs(){
+		List<String> argvSpecs = new ArrayList<String>();
+		argvSpecs.add("builder.NewOp(\'" + this.txnName + "\')");
+		
+		//TODO: complete all arguments
+		
+		return argvSpecs;
+	}
+	
 	
 	public boolean isAxiomRequired() {
 		for(CodePath cP : this.codePaths) {

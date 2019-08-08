@@ -156,6 +156,20 @@ public class Z3CodeGenerator {
 		}
 	}
 	
+	private void writeArgvSpec() {
+		this.conWriter.appendToFile("\ndef GenArgv():");
+		this.conWriter.appendToFile(CommonDef.indentStr + "builder = ArgvBuilder()");
+		for(CodeTransaction cTxn : this.txnCodeList) {
+			List<String> argvSpecs = cTxn.genArgvSpecs();
+			for(String argvSp : argvSpecs) {
+				this.conWriter.appendToFile(CommonDef.indentStr + argvSp);
+			}
+			this.conWriter.appendToFile("\n");
+		}
+		
+		this.conWriter.appendToFile(CommonDef.indentStr + "return builder.Build()");
+	}
+	
 	private void writeAppSpec() {
 		this.conWriter.appendToFile("\nclass " + this.pjName + "():");
 		this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.initFuncStr);
@@ -200,6 +214,7 @@ public class Z3CodeGenerator {
 		this.parseProject();
 		this.writeHeader();
 		this.writeDBSpec();
+		this.writeArgvSpec();
 		this.writeAppSpec();
 		this.writeFooter();
 	}
