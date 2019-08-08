@@ -16,6 +16,7 @@ import japa.parser.ast.expr.MethodCallExpr;
 import japa.parser.ast.expr.NameExpr;
 import japa.parser.ast.expr.VariableDeclarationExpr;
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -542,6 +543,61 @@ public class CodePath {
 		
 	}
 	
+	private void processInsertStmt(Insert inStmt, 
+			List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList) {
+		String tableName = inStmt.getTable().getName();
+		
+		Iterator colIt = inStmt.getColumns().iterator();
+		int paramIndex = 0;
+		while(colIt.hasNext()) {
+			String columnName = colIt.next().toString();
+			String paramStr = this.getParamForIndex(precedingNodeList, paramIndex + 1);
+			
+			//find datafield
+			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(columnName);
+			this.argvsMap.put(paramStr, df);
+			paramIndex++;
+		}
+	}
+	
+	private void processDeleteStmt(Delete deStmt, 
+			List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList) {
+		String tableName = deStmt.getTable().getName();
+		
+		//get the primary key and question mark
+		String whereClauseStr = deStmt.getWhere().toString();
+		
+		String[] subExpressionStrs = null;
+		if(whereClauseStr.contains("AND")) {
+			subExpressionStrs = whereClauseStr.split("AND");
+		}else if(whereClauseStr.contains("and")) {
+			subExpressionStrs = whereClauseStr.split("and");
+		}else {
+			subExpressionStrs = new String[1];
+			subExpressionStrs[0] = whereClauseStr;
+		}
+		
+		// get question mark
+		List<String> questionMarkStrs = new ArrayList<String>();
+		for (int i = 0; i < subExpressionStrs.length; i++) {
+			if (subExpressionStrs[i].contains("?")) {
+				String tempStr = subExpressionStrs[i].substring(0, subExpressionStrs[i].lastIndexOf('='));
+				questionMarkStrs.add(tempStr.trim());
+			}
+		}
+
+		// get back from the precedingNodeList
+		for (int i = 0; i < questionMarkStrs.size(); i++) {
+			String paramStr = this.getParamForIndex(precedingNodeList, i + 1);
+
+			// find datafield
+			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(questionMarkStrs.get(i));
+
+			this.argvsMap.put(paramStr, df);
+		}
+		
+	}
+	
 	/**
 	 * process update query such as insert, update, delete
 	 * - get all parameters and add into the argv hashmap
@@ -555,16 +611,12 @@ public class CodePath {
 			net.sf.jsqlparser.statement.Statement sqlStmt = Z3CodeGenerator.cJsqlParser.parse(new StringReader(sqlQuery));
 			
 			if(sqlStmt instanceof Insert) {
-				
+				this.processInsertStmt((Insert) sqlStmt, precedingNodeList);
 			}else if(sqlStmt instanceof Update){
 				this.processUpdateStmt((Update) sqlStmt, precedingNodeList);
 			}else if(sqlStmt instanceof Delete) {
-				
+				this.processDeleteStmt((Delete) sqlStmt, precedingNodeList);
 			}
-			
-			//get the question mark
-			
-			//get the set items
 			
 		} catch (JSQLParserException e) {
 			// TODO Auto-generated catch block
