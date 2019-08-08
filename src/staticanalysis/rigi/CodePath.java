@@ -362,6 +362,11 @@ public class CodePath {
 		}
 		System.out.println("<------------Analyze Path Ends<------------");
 	}
+	
+	public List<String> genCodePathSpec(){
+		List<String> codePathSpecs = new ArrayList<String>();
+		return codePathSpecs;
+	}
 
 	public boolean isReadOnly() {
 		return (this.aborted || this.updateQueries.isEmpty());

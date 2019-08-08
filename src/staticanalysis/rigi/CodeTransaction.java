@@ -58,6 +58,29 @@ public class CodeTransaction {
 		return argvSpecs;
 	}
 	
+	public List<String> genTxnSpecs(){
+		List<String> txnSpecs = new ArrayList<String>();
+		txnSpecs.add("class Op_" + this.txnName + "():");
+		txnSpecs.add(CommonDef.indentStr + CommonDef.initFuncStr);
+		
+		//init body str
+		String initBodyStr = CommonDef.indentStr + CommonDef.indentStr + "self.ops = [";
+		for(int i = 0; i < this.codePaths.size(); i++) {
+			String pathTempStr = "(";
+			CodePath cPath = this.codePaths.get(i);
+			pathTempStr += "self.cond" + i + ", self.csop" + i + ", self.sop1" + i + "),";
+			initBodyStr += pathTempStr;
+		}
+		
+		if(initBodyStr.endsWith(",")) {
+			initBodyStr = initBodyStr.substring(0, initBodyStr.length() - 1);
+		}
+		txnSpecs.add(initBodyStr);
+		
+		//add code for path
+		return txnSpecs;
+	}
+	
 	
 	public boolean isAxiomRequired() {
 		for(CodePath cP : this.codePaths) {

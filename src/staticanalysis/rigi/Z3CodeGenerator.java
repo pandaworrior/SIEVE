@@ -167,7 +167,17 @@ public class Z3CodeGenerator {
 			this.conWriter.appendToFile("\n");
 		}
 		
-		this.conWriter.appendToFile(CommonDef.indentStr + "return builder.Build()");
+		this.conWriter.appendToFile(CommonDef.indentStr + "return builder.Build()\n");
+	}
+	
+	private void writeTxnSpec() {
+		for(CodeTransaction cTxn : this.txnCodeList) {
+			List<String> txnSpecs = cTxn.genTxnSpecs();
+			for(String entry : txnSpecs) {
+				this.conWriter.appendToFile(entry);
+			}
+			this.conWriter.appendToFile("\n");
+		}
 	}
 	
 	private void writeAppSpec() {
@@ -215,6 +225,7 @@ public class Z3CodeGenerator {
 		this.writeHeader();
 		this.writeDBSpec();
 		this.writeArgvSpec();
+		this.writeTxnSpec();
 		this.writeAppSpec();
 		this.writeFooter();
 	}
