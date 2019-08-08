@@ -32,15 +32,22 @@ import util.annotationparser.SchemaParser;
  *  2. we eliminate paths that either contain abort or do not contain any update statement
  *     -> Done
  *  3. we create specifications for database tables
- *     -> Aug 7th
- *  4. we gather all select queries and translate into Z3 code, create a dict for it
- *  5. we gather all update queries and translate into Z3 code, create a dict for it
- *  6. for each path, we gather path condition
- *     6.1 Propagate the branch condition to if and else paths
+ *     -> Done
+ *  4. for each path, we gather path condition
+ *     4.1 Propagate the branch condition to if and else paths
  *         -> Done
- *     6.2 gather path conditions
- *  7. for each path, we translate side effects
- *  8. the rest of code required by Rigi
+ *     4.2 gather path conditions
+ *         -> Aug 8th
+ *     4.3 translate select and include select into path condition
+ *         -> Aug 8th
+ *  5. side effects collection
+ *     5.1 create functions for all paths
+ *         -> Aug 8th
+ *     5.2 for each path, we translate side effects
+ *         -> Aug 8th
+ *  6. the rest of code required by Rigi
+ *  7. make courseware run with vasco
+ *     -> Aug 9th
  * @author cheng
  *
  */
@@ -68,7 +75,7 @@ public class Z3CodeGenerator {
 	/** The database specs */
 	DatabaseSpec dbSpec;
 	
-	static String indentStr = "    ";
+	
 	
     private void parseProject() {
 		
@@ -102,7 +109,9 @@ public class Z3CodeGenerator {
 			String txnName = cfg.getCfgIdentifier().getShortName();
 			List<CFGGraph<CodeNodeIdentifier, Expression>> reducedCfgList = PathAnalyzer.obtainAllReducedControlFlowGraphs(cfg, rPathAbSet);
 			CodeTransaction codeTxn = new CodeTransaction(txnName, reducedCfgList);
-			this.txnCodeList.add(codeTxn);
+			if(!codeTxn.codePaths.isEmpty()) {
+				this.txnCodeList.add(codeTxn);
+			}
 			codeTxn.printInDetails();
 		}
 		
@@ -118,6 +127,7 @@ public class Z3CodeGenerator {
 	 */
 	public Z3CodeGenerator(String pName, String pPath, String fFile, String sfPath)
 	{
+		this.pjName = pName;
 		this.conWriter = new ContentWriter(pName);
 		this.pjsParser = new ProjectParser(pPath, pName);
 		PathAnalyzer.addFunctionMustBeProcessedListFromFile(fFile);
@@ -132,13 +142,53 @@ public class Z3CodeGenerator {
 		this.conWriter.separatorWrite();
 	}
 	
+	private void writeFooter() {
+		this.conWriter.appendToFile("\ncheck(" + this.pjName + "())");
+	}
+	
 	private void writeDBSpec() {
 		String openerStr = "def GenState():";
 		this.conWriter.appendToFile(openerStr);
 		List<String> dbSpecs = this.dbSpec.genTableSpecs();
 		
 		for(String tabSpec : dbSpecs) {
-			this.conWriter.appendToFile(indentStr + tabSpec);
+			this.conWriter.appendToFile(CommonDef.indentStr + tabSpec);
+		}
+	}
+	
+	private void writeAppSpec() {
+		this.conWriter.appendToFile("\nclass " + this.pjName + "():");
+		this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.initFuncStr);
+		
+		// for ops
+		String opsStr = "self.ops = [";
+		for(CodeTransaction cTxn : this.txnCodeList) {
+			opsStr += "Op_" + cTxn.txnName + "(),";
+		}
+		
+		if(opsStr.endsWith(",")) {
+			opsStr = opsStr.substring(0, opsStr.length() - 1);
+		}
+		opsStr += "]";
+		this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.indentStr + opsStr);
+		
+		// for states
+		this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.indentStr + "self.state = GenState");
+		
+		// for argv
+		this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.indentStr + "self.argv = GenArgv");
+		
+		//for Axiom
+		
+		String axiomStr = "";
+		for(CodeTransaction cTxn : this.txnCodeList) {
+			
+		}
+		
+		if(axiomStr.contentEquals("")) {
+			this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.indentStr + "self.axiom = AxiomEmpty()");
+		}else {
+			//TODO: please implement here
 		}
 	}
 	
@@ -150,6 +200,8 @@ public class Z3CodeGenerator {
 		this.parseProject();
 		this.writeHeader();
 		this.writeDBSpec();
+		this.writeAppSpec();
+		this.writeFooter();
 	}
 	
 	

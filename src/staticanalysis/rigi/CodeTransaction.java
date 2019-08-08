@@ -49,6 +49,16 @@ public class CodeTransaction {
 		}
 	}
 	
+	
+	public boolean isAxiomRequired() {
+		for(CodePath cP : this.codePaths) {
+			if(cP.isAxiomRequired()) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public void printInShort() {
 		System.out.println("txnName" + this.txnName + "; reduced cfg list size " + this.reducedCfgList.size() + "; updated path num " + this.codePaths.size());
 	}

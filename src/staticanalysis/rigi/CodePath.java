@@ -28,11 +28,21 @@ public class CodePath {
 	List<String> selectQueries;
 	List<String> updateQueries;
 	boolean aborted = false;
+	
+	/** for specs */
+	PathCondition pCond;
+	
+	ReplicationCondition rCond;
+	
+	List<Axiom> axioms;
 
 	public CodePath(CFGGraph<CodeNodeIdentifier, Expression> cfg) {
 		this.pathCfg = cfg;
 		this.selectQueries = new ArrayList<String>();
 		this.updateQueries = new ArrayList<String>();
+		this.pCond = new PathCondition();
+		this.rCond = new ReplicationCondition();
+		this.axioms = new ArrayList<Axiom>();
 	}
 
 	private void addOneSelectQuery(String _str) {
@@ -355,6 +365,10 @@ public class CodePath {
 
 	public boolean isReadOnly() {
 		return (this.aborted || this.updateQueries.isEmpty());
+	}
+	
+	public boolean isAxiomRequired() {
+		return !this.axioms.isEmpty();
 	}
 	
 	public void printOut() {
