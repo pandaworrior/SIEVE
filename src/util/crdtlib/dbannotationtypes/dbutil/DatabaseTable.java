@@ -386,6 +386,15 @@ public abstract class DatabaseTable {
 		return dataFieldMap.get(dTN);
 
 	}
+	
+	public boolean isDataFieldExist(String dTN) {
+		if(dataFieldMap != null) {
+			if(dataFieldMap.containsKey(dTN)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Gets the _ data_ field.

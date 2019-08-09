@@ -17,6 +17,7 @@ import japa.parser.ast.expr.NameExpr;
 import japa.parser.ast.expr.VariableDeclarationExpr;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
+import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -441,11 +442,7 @@ public class CodePath {
 			net.sf.jsqlparser.statement.Statement sqlStmt = Z3CodeGenerator.cJsqlParser.parse(new StringReader(sqlQuery));
 		
 			PlainSelect selectStmt = (PlainSelect) ((Select) sqlStmt).getSelectBody();
-			//get the table list TODO: right now assume a single table
-			String tableStr = selectStmt.getFromItem().toString();
-			tableStr.replaceAll(" ", "");
-			String[] tables = tableStr.split(",");
-			
+
 			//get the primary key and question mark
 			String whereClauseStr = selectStmt.getWhere().toString();
 			
@@ -473,7 +470,7 @@ public class CodePath {
 				String paramStr = this.getParamForIndex(precedingNodeList, i + 1);
 
 				// find datafield
-				DataField df = this.dbSchemaParser.getTableByName(tables[0]).get_Data_Field(questionMarkStrs.get(i));
+				DataField df = this.dbSchemaParser.getDataFieldByName(questionMarkStrs.get(i));
 
 				this.argvsMap.put(paramStr, df);
 			}

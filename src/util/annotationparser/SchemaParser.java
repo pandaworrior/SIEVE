@@ -23,6 +23,7 @@ import util.crdtlib.dbannotationtypes.ArsetTable;
 import util.crdtlib.dbannotationtypes.AusetTable;
 import util.crdtlib.dbannotationtypes.READONLY_Table;
 import util.crdtlib.dbannotationtypes.UosetTable;
+import util.crdtlib.dbannotationtypes.dbutil.DataField;
 import util.crdtlib.dbannotationtypes.dbutil.DatabaseTable;
 import util.crdtlib.dbannotationtypes.dbutil.RuntimeExceptionType;
 
@@ -169,6 +170,24 @@ public class SchemaParser {
 	 */
 	public DatabaseTable getTableByName(String tableName){
 		return this.tableCrdtFormMap.get(tableName);
+	}
+	
+	public DataField getDataFieldByName(String dfName) {
+		
+		DataField df = null;
+		Iterator<Map.Entry<String, DatabaseTable>> it = this.tableCrdtFormMap.entrySet()
+				.iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, DatabaseTable> entry = (Map.Entry<String, DatabaseTable>) it
+					.next();
+			DatabaseTable dT = entry.getValue();
+			if(dT.isDataFieldExist(dfName)) {
+				df = dT.get_Data_Field(dfName);
+				break;
+			}
+		}
+		
+		return df;
 	}
 	
 	
