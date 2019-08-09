@@ -53,6 +53,11 @@ public class CommonDef {
 	    return strNum.matches("-?\\d+(\\.\\d+)?");
 	}
 	
+	/**
+	 * Get param string from Expression
+	 * @param expr
+	 * @return
+	 */
 	static List<String> getParamStrsFromExpr(Expression expr) {
 		List<String> oprStrs = new ArrayList<String>();
 		MethodCallExpr methodCallExp = (MethodCallExpr) expr;
