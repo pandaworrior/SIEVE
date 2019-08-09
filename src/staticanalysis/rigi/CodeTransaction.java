@@ -37,7 +37,7 @@ public class CodeTransaction {
 		Iterator<CFGGraph<CodeNodeIdentifier, Expression>> pathIt = this.reducedCfgList.iterator();
 		while(pathIt.hasNext()) {
 			CFGGraph<CodeNodeIdentifier, Expression>  cfg = pathIt.next();
-			CodePath cPath = new CodePath(cfg, this.dbSchemaParser);
+			CodePath cPath = new CodePath(this.txnName, cfg, this.dbSchemaParser);
 			cPath.findAllSqlStatmentsAndAborts();
 			this.codePaths.add(cPath);
 		}

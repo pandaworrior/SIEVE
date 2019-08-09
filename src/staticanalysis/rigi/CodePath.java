@@ -38,6 +38,8 @@ import util.debug.Debug;
  * This class is used to represent a path in a transaction
  **/
 public class CodePath {
+	
+	String txnName;
 
 	CFGGraph<CodeNodeIdentifier, Expression> pathCfg;
 	List<String> selectQueries;
@@ -58,9 +60,13 @@ public class CodePath {
 	
 	/** The DB Schema Parser. */
 	SchemaParser dbSchemaParser;
+	
+	/** Record all update queries and all necessary informations*/
+	List<UpdateQueryRepr> upStmtInfo;
 
-	public CodePath(CFGGraph<CodeNodeIdentifier, Expression> cfg,
+	public CodePath(String _txnName, CFGGraph<CodeNodeIdentifier, Expression> cfg,
 			SchemaParser _sp) {
+		this.txnName = _txnName;
 		this.pathCfg = cfg;
 		this.selectQueries = new ArrayList<String>();
 		this.updateQueries = new ArrayList<String>();
@@ -69,6 +75,7 @@ public class CodePath {
 		this.axioms = new ArrayList<Axiom>();
 		this.argvsMap = new HashMap<String, DataField>();
 		this.dbSchemaParser = _sp;
+		this.upStmtInfo = new ArrayList<UpdateQueryRepr>();
 	}
 
 	private void addOneSelectQuery(String _str) {
@@ -407,20 +414,30 @@ public class CodePath {
 		}
 		System.out.println("<------------Analyze Path Ends<------------");
 	}
-	
+
+	/**
+	 * Process, get param list, and set FieldRepr data
+	 * @param precedingNodeList
+	 * @param paramIndex
+	 * @param fR
+	 * @return
+	 */
 	private List<String> getParamInQueriesByIndex(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
-			int paramIndex) {
+			int paramIndex, FieldRepr fR) {
 		List<String> paramStrs = new ArrayList<String>();
 		for(int i = precedingNodeList.size() - 1; i >= 0; i--) {
 			Expression expr = precedingNodeList.get(i).getNodeData();
 			if(this.isSetParamMethodCallExpression(expr)) {
 				System.out.println("set " + expr.toString());
-				List<String> argsForExpr = CommonDef.getParamStrsFromExpr(expr);
+				List<String> argsForExpr = CommonDef.getParamStrsFromExpr(expr, fR);
 				if(argsForExpr != null && argsForExpr.size() > 1) {
 					int index = Integer.valueOf(argsForExpr.get(0));
 					if(index == paramIndex) {
 						for(int j = 1; j < argsForExpr.size(); j++) {
 							paramStrs.add(argsForExpr.get(j));
+						}
+						if(fR != null) {
+							fR.addParams(paramStrs);
 						}
 						break;
 					}
@@ -469,7 +486,7 @@ public class CodePath {
 
 			// get back from the precedingNodeList
 			for (int i = 0; i < questionMarkStrs.size(); i++) {
-				List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1);
+				List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1, null);
 
 				// find datafield
 				DataField df = this.dbSchemaParser.getDataFieldByName(questionMarkStrs.get(i));
@@ -494,6 +511,9 @@ public class CodePath {
 			List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList) {
 		String tableName = updateStmt.getTable().getName();
 		
+		//generate a update representation
+	    UpdateQueryRepr upRepr = new UpdateQueryRepr(updateStmt, tableName, this.txnName);
+		
 		//get whereclause
 		String whereClauseStr = updateStmt.getWhere().toString();
 		String[] subExpressionStrs = null;
@@ -513,16 +533,24 @@ public class CodePath {
 		while(colIt.hasNext() && valueIt.hasNext()) {
 			String columnName = colIt.next().toString();
 			String valueStr = valueIt.next().toString();
-			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1);
 			
-			//need to process paramStr to get right str from -1 * price
+			//create FieldRepr
+			FieldRepr fR = new FieldRepr();
+			
+			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1, fR);
 			
 			//find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(columnName);
+			
+			fR.setDataField(df);
 			for(String paramStr : paramStrs) {
 				this.argvsMap.put(paramStr, df);
 			}
+			
 			paramIndex++;
+			
+			//add field repr to the list
+			upRepr.addOneModifiedField(fR);
 		}
 		
 		// get question mark
@@ -536,18 +564,25 @@ public class CodePath {
 
 		// get back from the precedingNodeList
 		for (int i = 0; i < questionMarkStrs.size(); i++) {
-			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1);
+			
+			FieldRepr pkFR = new FieldRepr();
+			
+			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1, pkFR);
 
 			// find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(questionMarkStrs.get(i));
 
+			pkFR.setDataField(df);
 			for(String paramStr : paramStrs) {
 				this.argvsMap.put(paramStr, df);
 			}
 			
+			//add the pk field back to the qry info
+			upRepr.addOnePrimaryKeyField(pkFR);
 			paramIndex++;
 		}
 		
+		this.upStmtInfo.add(upRepr);
 	}
 	
 	private void processInsertStmt(Insert inStmt, 
@@ -558,7 +593,7 @@ public class CodePath {
 		int paramIndex = 0;
 		while(colIt.hasNext()) {
 			String columnName = colIt.next().toString();
-			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1);
+			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1, null);
 			
 			//find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(columnName);
@@ -597,7 +632,7 @@ public class CodePath {
 
 		// get back from the precedingNodeList
 		for (int i = 0; i < questionMarkStrs.size(); i++) {
-			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1);
+			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1, null);
 
 			// find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(questionMarkStrs.get(i));
@@ -682,8 +717,12 @@ public class CodePath {
 		String defStr = "def sop" + pathIndex + CommonDef.funcParamStr;
 		sEffectSpecs.add(defStr);
 		
-		//TODO: translate here
-		
+		for(UpdateQueryRepr upRepr : this.upStmtInfo) {
+			List<String> specs = upRepr.genUpdateQuerySpecs();
+			for(String e : specs) {
+				sEffectSpecs.add(CommonDef.indentStr + e);
+			}
+		}
 		sEffectSpecs.add(CommonDef.indentStr + "return state");
 		return sEffectSpecs;
 	}

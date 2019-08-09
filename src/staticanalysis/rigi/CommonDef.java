@@ -58,7 +58,7 @@ public class CommonDef {
 	 * @param expr
 	 * @return
 	 */
-	static List<String> getParamStrsFromExpr(Expression expr) {
+	static List<String> getParamStrsFromExpr(Expression expr, FieldRepr fR) {
 		List<String> oprStrs = new ArrayList<String>();
 		MethodCallExpr methodCallExp = (MethodCallExpr) expr;
 		List<Expression> args = methodCallExp.getArgs();
@@ -72,6 +72,10 @@ public class CommonDef {
 				}
 				if(!isNumeric(rightExpr.toString())) {
 					oprStrs.add(rightExpr.toString());
+				}
+				
+				if(fR != null) {
+					fR.setExpression(binaryExpr);
 				}
 			}else {
 				oprStrs.add(e.toString());
