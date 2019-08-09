@@ -27,9 +27,10 @@ public class PathCondition {
 		}else {
 			returnStr += "And(";
 			for(Condition cond : this.condList) {
-				condSpecs.add(cond.genSpec());
+				//argument get from condition
+				//condSpecs.add(cond.genSpec());
 				
-				//TODO: returnStr and conjuction with predicates
+				returnStr += cond.genSpec() + ",";
 			}
 			
 			if(returnStr.endsWith(",")) {

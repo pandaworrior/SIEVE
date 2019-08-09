@@ -63,6 +63,9 @@ public class CodePath {
 	
 	/** Record all update queries and all necessary informations*/
 	List<UpdateQueryRepr> upStmtInfo;
+	
+	/** Record all select queries and all necessary informations*/
+	static HashMap<String, SelectQueryRepr> selStmtInfo;
 
 	public CodePath(String _txnName, CFGGraph<CodeNodeIdentifier, Expression> cfg,
 			SchemaParser _sp) {
@@ -76,6 +79,7 @@ public class CodePath {
 		this.argvsMap = new HashMap<String, DataField>();
 		this.dbSchemaParser = _sp;
 		this.upStmtInfo = new ArrayList<UpdateQueryRepr>();
+		selStmtInfo = new HashMap<String, SelectQueryRepr>();
 	}
 
 	private void addOneSelectQuery(String _str) {
@@ -149,6 +153,13 @@ public class CodePath {
 		} else {
 			return false;
 		}
+	}
+	
+	private boolean isConditionalExpression(CFGNode<CodeNodeIdentifier, Expression> cNode) {
+		if(cNode.isCondExpr()) {
+			return true;
+		}
+		return false;
 	}
 
 	private String assembleStringForBinaryExpr(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
@@ -363,7 +374,7 @@ public class CodePath {
 		}
 		
 		sqlStr = CommonDef.trimQuotes(sqlStr);
-		System.out.println("Trim after " + sqlStr);
+		//System.out.println("Trim after " + sqlStr);
 		return sqlStr;
 	}
 
@@ -460,6 +471,9 @@ public class CodePath {
 			//first parse the select query
 			net.sf.jsqlparser.statement.Statement sqlStmt = Z3CodeGenerator.cJsqlParser.parse(new StringReader(sqlQuery));
 		
+			//generate a select representation
+		    SelectQueryRepr selRepr = new SelectQueryRepr(sqlStmt, this.txnName);
+		    
 			PlainSelect selectStmt = (PlainSelect) ((Select) sqlStmt).getSelectBody();
 
 			//get the primary key and question mark
@@ -486,20 +500,37 @@ public class CodePath {
 
 			// get back from the precedingNodeList
 			for (int i = 0; i < questionMarkStrs.size(); i++) {
-				List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1, null);
+				//create FieldRepr
+				FieldRepr fR = new FieldRepr();
+				
+				List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1, fR);
 
 				// find datafield
 				DataField df = this.dbSchemaParser.getDataFieldByName(questionMarkStrs.get(i));
 
+				fR.setDataField(df);
 				for(String paramStr : paramStrs) {
 					this.argvsMap.put(paramStr, df);
 				}
+				selRepr.addOneKeyField(fR);
 			}
+			selStmtInfo.put(sqlQuery, selRepr);
 			
 		} catch (JSQLParserException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * process path condition
+	 * 
+	 * @param cfgNode
+	 * @param precedingNodeList
+	 */
+	private void processPathCondition(CFGNode<CodeNodeIdentifier, Expression> cfgNode,
+			List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList) {
+		this.pCond.addPathCondition(new Condition(cfgNode.getNodeData(), cfgNode.isElsePath(), precedingNodeList));
 	}
 	
 	/**
@@ -698,6 +729,9 @@ public class CodePath {
 					String e = this.findSqlStatementFromContext(precedingNodeList, cfgNode);
 					//process this select query
 					this.processSelectQuery(e, precedingNodeList);
+				}else if(this.isConditionalExpression(cfgNode)) {
+					//process this condition
+					this.processPathCondition(cfgNode, precedingNodeList);
 				}
 			}
 		}

@@ -270,6 +270,5 @@ public class Z3CodeGenerator {
 		codeGen.generateCode();
 		
 	}
-	
 
 }
