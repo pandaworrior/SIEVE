@@ -155,8 +155,8 @@ public class CodeNodeIdentifier extends MethodIdentifier {
 	}
 	
 	public String getShortName() {
-		String str = this.className + "-"
-				+ this.methodName + "-" + Integer.toString(this.beginLine);
+		String str = this.className + "_"
+				+ this.methodName + "_" + Integer.toString(this.beginLine);
 		return str;
 	}
 	

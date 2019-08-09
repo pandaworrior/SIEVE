@@ -91,7 +91,7 @@ public class CodeTransaction {
 		txnSpecs.add(CommonDef.indentStr + CommonDef.initFuncStr);
 		
 		//init body str
-		String initBodyStr = CommonDef.indentStr + CommonDef.indentStr + "self.ops = [";
+		String initBodyStr = CommonDef.indentStr + CommonDef.indentStr + "self.sops = [";
 		for(int i = 0; i < this.codePaths.size(); i++) {
 			String pathTempStr = "(";
 			pathTempStr += "self.cond" + i + ", self.csop" + i + ", self.sop" + i + "),";
@@ -101,6 +101,7 @@ public class CodeTransaction {
 		if(initBodyStr.endsWith(",")) {
 			initBodyStr = initBodyStr.substring(0, initBodyStr.length() - 1);
 		}
+		initBodyStr += "]";
 		txnSpecs.add(initBodyStr + "\n");
 		
 		//add code for path

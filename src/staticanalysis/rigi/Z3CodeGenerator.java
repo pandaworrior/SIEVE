@@ -152,12 +152,22 @@ public class Z3CodeGenerator {
 	}
 	
 	private void writeDBSpec() {
-		String openerStr = "def GenState():";
-		this.conWriter.appendToFile(openerStr);
+		
+		//table definition
 		List<String> dbSpecs = this.dbSpec.genTableSpecs();
 		
 		for(String tabSpec : dbSpecs) {
-			this.conWriter.appendToFile(CommonDef.indentStr + tabSpec);
+			this.conWriter.appendToFile(tabSpec);
+		}
+		
+		//instance definition and states
+		
+		String openerStr = "def GenState():";
+		this.conWriter.appendToFile(openerStr);
+		
+		List<String> stateSpecs = this.dbSpec.genStateSpecs();
+		for(String insSpec : stateSpecs) {
+			this.conWriter.appendToFile(CommonDef.indentStr + insSpec);
 		}
 	}
 	
@@ -200,6 +210,9 @@ public class Z3CodeGenerator {
 		}
 		opsStr += "]";
 		this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.indentStr + opsStr);
+		
+		//for tables
+		this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.indentStr + "self.tables = " + this.dbSpec.genTableNames());
 		
 		// for states
 		this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.indentStr + "self.state = GenState");

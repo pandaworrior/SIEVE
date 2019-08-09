@@ -83,4 +83,31 @@ public class CommonDef {
 		}
 		return oprStrs;
 	}
+	
+	static String getPrimaryKeyString(List<FieldRepr> pkFPs) {
+		String specStr = "{";
+		for(FieldRepr pk : pkFPs) {
+			specStr += "\'" + pk.df.get_Data_Field_Name() + "\' : " + pk.params.get(0) + ",";
+		}
+		
+		if(specStr.endsWith(",")) {
+			specStr = specStr.substring(0, specStr.length() - 1);
+		}
+		specStr += "}";
+		return specStr;
+	}
+	
+	static String getModifiedKeyString(List<FieldRepr> fRs) {
+		String specStr = "{";
+		
+		for(FieldRepr fR : fRs) {
+			specStr += "\'" + fR.df.get_Data_Field_Name() + "\' : " + fR.df.get_Data_Field_Name() + ",";
+		}
+		
+		if(specStr.endsWith(",")) {
+			specStr = specStr.substring(0, specStr.length() - 1);
+		}
+		specStr += "}";
+		return specStr;
+	}
 }

@@ -3,6 +3,8 @@ package staticanalysis.rigi;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.jsqlparser.statement.update.Update;
+
 /**
  * This class is used to represent a 
  * @author cheng
@@ -55,13 +57,23 @@ public class UpdateQueryRepr {
 		return specs;
 	}
 	
+	private String getAttrFetchSpecs(FieldRepr fR) {
+		String atFetchSpec = fR.df.get_Data_Field_Name() + " = ";
+		atFetchSpec += "state[\'TABLE_" + this.tableName + "\'].get(";
+		atFetchSpec += CommonDef.getPrimaryKeyString(this.primaryKeyFields);
+		atFetchSpec += ", \'" + fR.df.get_Data_Field_Name() + "\')";
+		return atFetchSpec;
+	}
+	
 	/**
 	 * Read from database
 	 * @return
 	 */
 	private List<String> genFetchSpecs(){
 		List<String> specs = new ArrayList<String>();
-		//TODO: please complete this
+		for(FieldRepr fR : this.modifiedFields) {
+			specs.add(this.getAttrFetchSpecs(fR));
+		}
 		return specs;
 	}
 	
@@ -83,6 +95,13 @@ public class UpdateQueryRepr {
 	private List<String> genStoreSpecs(){
 		List<String> specs = new ArrayList<String>();
 		//TODO: please complete this
+		if(this.sqlStmt instanceof Update) {
+			String upSpec = "state[\'TABLE_" + this.tableName + "\'].update(";
+			upSpec += CommonDef.getPrimaryKeyString(primaryKeyFields);
+			upSpec += ", " + CommonDef.getModifiedKeyString(modifiedFields);
+			upSpec += ")";
+			specs.add(upSpec);
+		}
 		return specs;
 	}
 	

@@ -41,6 +41,21 @@ public class DatabaseSpec {
 		return tabIns;
 	}
 	
+	public String genTableNames() {
+		String returnSpec = "[";
+		
+		for(DatabaseTable dt : this.dbSchemaParser.getAllTableInstances()) {
+			returnSpec += dt.get_Table_Name() + ",";
+		}
+		
+		// replace the last comma with )
+		if(returnSpec.endsWith(","))
+		{
+			returnSpec = returnSpec.substring(0, returnSpec.length() - 1) + "]";
+		}
+		return returnSpec;
+	}
+	
 	private String genReturnSpecs() {
 		String returnSpec = "return {";
 		
@@ -62,10 +77,14 @@ public class DatabaseSpec {
 			tabsSpecs.addAll(tabSpec.genTabSpecs());
 			tabsSpecs.add("\n");
 		}
-		
-		tabsSpecs.addAll(this.genSpecsForTabIns());
-		tabsSpecs.add(this.genReturnSpecs());
 		return tabsSpecs;
+	}
+	
+	public List<String> genStateSpecs(){
+		List<String> stateSpecs = new ArrayList<String>();
+		stateSpecs.addAll(this.genSpecsForTabIns());
+		stateSpecs.add(this.genReturnSpecs());
+		return stateSpecs;
 	}
 
 }
