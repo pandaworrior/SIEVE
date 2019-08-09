@@ -1,5 +1,11 @@
 package staticanalysis.rigi;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import japa.parser.ast.expr.BinaryExpr;
+import japa.parser.ast.expr.Expression;
+import japa.parser.ast.expr.MethodCallExpr;
 import util.crdtlib.dbannotationtypes.dbutil.DataField;
 
 public class CommonDef {
@@ -41,5 +47,31 @@ public class CommonDef {
 			return _str.substring(_str.indexOf('\"') + 1, _str.lastIndexOf('\"'));
 		else
 			return _str;
+	}
+	
+	static boolean isNumeric(String strNum) {
+	    return strNum.matches("-?\\d+(\\.\\d+)?");
+	}
+	
+	static List<String> getParamStrsFromExpr(Expression expr) {
+		List<String> oprStrs = new ArrayList<String>();
+		MethodCallExpr methodCallExp = (MethodCallExpr) expr;
+		List<Expression> args = methodCallExp.getArgs();
+		for(Expression e : args) {
+			if(e instanceof BinaryExpr) {
+				BinaryExpr binaryExpr = (BinaryExpr) e;
+				Expression leftExpr = binaryExpr.getLeft();
+				Expression rightExpr = binaryExpr.getRight();
+				if(!isNumeric(leftExpr.toString())) {
+					oprStrs.add(leftExpr.toString());
+				}
+				if(!isNumeric(rightExpr.toString())) {
+					oprStrs.add(rightExpr.toString());
+				}
+			}else {
+				oprStrs.add(e.toString());
+			}
+		}
+		return oprStrs;
 	}
 }

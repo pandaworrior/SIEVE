@@ -62,14 +62,25 @@ public class CodeTransaction {
 		List<String> argvSpecs = new ArrayList<String>();
 		argvSpecs.add("builder.NewOp(\'" + this.txnName + "\')");
 		
+		HashMap<String, DataField> allArgvs = new HashMap<String, DataField>();
+		
+		//remove duplicates
 		for(CodePath cP : this.codePaths) {
 			HashMap<String, DataField> argvMap = cP.getArgvMap();
 			Iterator<Entry<String, DataField>> argvIt = argvMap.entrySet().iterator();
 			while(argvIt.hasNext()) {
 				Entry<String, DataField> argvEntry = argvIt.next();
-				String typeStr = CommonDef.getArgvBuilderType(argvEntry.getValue());
-				argvSpecs.add("builder.AddArgv(\'" + argvEntry.getKey() + "\'," + typeStr + ")");
+				allArgvs.put(argvEntry.getKey(), argvEntry.getValue());
 			}
+		}
+		
+		//gen specs
+		Iterator<Entry<String, DataField>> argvItForTxn = allArgvs.entrySet().iterator();
+		while(argvItForTxn.hasNext()) {
+			Entry<String, DataField> argvEntry = argvItForTxn.next();
+			allArgvs.put(argvEntry.getKey(), argvEntry.getValue());
+			String typeStr = CommonDef.getArgvBuilderType(argvEntry.getValue());
+			argvSpecs.add("builder.AddArgv(\'" + argvEntry.getKey() + "\'," + typeStr + ")");
 		}
 		return argvSpecs;
 	}

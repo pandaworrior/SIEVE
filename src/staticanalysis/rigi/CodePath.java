@@ -408,25 +408,27 @@ public class CodePath {
 		System.out.println("<------------Analyze Path Ends<------------");
 	}
 	
-	private String getParamForIndex(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
+	private List<String> getParamInQueriesByIndex(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
 			int paramIndex) {
-		String paramStr = "";
+		List<String> paramStrs = new ArrayList<String>();
 		for(int i = precedingNodeList.size() - 1; i >= 0; i--) {
 			Expression expr = precedingNodeList.get(i).getNodeData();
 			if(this.isSetParamMethodCallExpression(expr)) {
-				String methodStr = expr.toString();
-				System.out.println("set " + methodStr);
-				methodStr = methodStr.substring(methodStr.indexOf('(') + 1, methodStr.indexOf(')'));
-				String[] strs = methodStr.split(",");
-				int index = Integer.valueOf(strs[0]);
-				if(index == paramIndex) {
-					paramStr = strs[1].trim();
-					break;
+				System.out.println("set " + expr.toString());
+				List<String> argsForExpr = CommonDef.getParamStrsFromExpr(expr);
+				if(argsForExpr != null && argsForExpr.size() > 1) {
+					int index = Integer.valueOf(argsForExpr.get(0));
+					if(index == paramIndex) {
+						for(int j = 1; j < argsForExpr.size(); j++) {
+							paramStrs.add(argsForExpr.get(j));
+						}
+						break;
+					}
 				}
 			}
 		}
 		
-		return paramStr;
+		return paramStrs;
 	}
 	
 	/**
@@ -467,12 +469,14 @@ public class CodePath {
 
 			// get back from the precedingNodeList
 			for (int i = 0; i < questionMarkStrs.size(); i++) {
-				String paramStr = this.getParamForIndex(precedingNodeList, i + 1);
+				List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1);
 
 				// find datafield
 				DataField df = this.dbSchemaParser.getDataFieldByName(questionMarkStrs.get(i));
 
-				this.argvsMap.put(paramStr, df);
+				for(String paramStr : paramStrs) {
+					this.argvsMap.put(paramStr, df);
+				}
 			}
 			
 		} catch (JSQLParserException e) {
@@ -509,11 +513,15 @@ public class CodePath {
 		while(colIt.hasNext() && valueIt.hasNext()) {
 			String columnName = colIt.next().toString();
 			String valueStr = valueIt.next().toString();
-			String paramStr = this.getParamForIndex(precedingNodeList, paramIndex + 1);
+			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1);
+			
+			//need to process paramStr to get right str from -1 * price
 			
 			//find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(columnName);
-			this.argvsMap.put(paramStr, df);
+			for(String paramStr : paramStrs) {
+				this.argvsMap.put(paramStr, df);
+			}
 			paramIndex++;
 		}
 		
@@ -528,12 +536,14 @@ public class CodePath {
 
 		// get back from the precedingNodeList
 		for (int i = 0; i < questionMarkStrs.size(); i++) {
-			String paramStr = this.getParamForIndex(precedingNodeList, paramIndex + 1);
+			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1);
 
 			// find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(questionMarkStrs.get(i));
 
-			this.argvsMap.put(paramStr, df);
+			for(String paramStr : paramStrs) {
+				this.argvsMap.put(paramStr, df);
+			}
 			
 			paramIndex++;
 		}
@@ -548,11 +558,13 @@ public class CodePath {
 		int paramIndex = 0;
 		while(colIt.hasNext()) {
 			String columnName = colIt.next().toString();
-			String paramStr = this.getParamForIndex(precedingNodeList, paramIndex + 1);
+			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1);
 			
 			//find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(columnName);
-			this.argvsMap.put(paramStr, df);
+			for(String paramStr : paramStrs) {
+				this.argvsMap.put(paramStr, df);
+			}
 			paramIndex++;
 		}
 	}
@@ -585,12 +597,14 @@ public class CodePath {
 
 		// get back from the precedingNodeList
 		for (int i = 0; i < questionMarkStrs.size(); i++) {
-			String paramStr = this.getParamForIndex(precedingNodeList, i + 1);
+			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1);
 
 			// find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(questionMarkStrs.get(i));
 
-			this.argvsMap.put(paramStr, df);
+			for(String paramStr : paramStrs) {
+				this.argvsMap.put(paramStr, df);
+			}
 		}
 		
 	}
