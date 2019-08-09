@@ -49,9 +49,8 @@ public class TableSpecs {
 	private List<String> addKeySpecs(){
 		List<String> keySpec = new ArrayList<String>();
 		for(DataField df : this.dbTable.getPrimaryKeyDataFieldList()) {
-			String z3Type = this.getAttrZ3Type(df);
-			keySpec.add(this.dbTable.get_Table_Name() + ".addKey(\'" + df.get_Data_Field_Name() 
-					+ "\', " + z3Type + ")");
+			keySpec.add(this.dbTable.get_Table_Name() + ".setPKey(\'" + df.get_Data_Field_Name() 
+					+ "\')");
 		}
 		return keySpec;
 	}
@@ -59,14 +58,14 @@ public class TableSpecs {
 	private List<String> addAttrSpecs(){
 		List<String> attrSpec = new ArrayList<String>();
 		for(DataField df : this.dbTable.getDataFieldList()) {
-			if(df.is_Primary_Key() || df.get_Data_Field_Name().contains("_SP_clock") ||
+			if(df.get_Data_Field_Name().contains("_SP_clock") ||
 					df.get_Data_Field_Name().contains("_SP_ts") ||
 					df.get_Data_Field_Name().contains("_SP_del")) {
 				continue;
 			}
 			
 			String z3Type = this.getAttrZ3Type(df);
-			attrSpec.add(this.dbTable.get_Table_Name() + ".addValue(\'" + df.get_Data_Field_Name() 
+			attrSpec.add(this.dbTable.get_Table_Name() + ".addAttr(\'" + df.get_Data_Field_Name() 
 					+ "\', " + z3Type + ")");
 		}
 		return attrSpec;
@@ -75,10 +74,13 @@ public class TableSpecs {
 	public List<String> genTabSpecs(){
 		List<String> tabSpec = new ArrayList<String>();
 		tabSpec.add(this.dbTable.get_Table_Name() + " = Table(\'" + this.dbTable.get_Table_Name() + "\')");
-		// keys
-		tabSpec.addAll(this.addKeySpecs());
 		// attributes
 		tabSpec.addAll(this.addAttrSpecs());
+		// keys
+		tabSpec.addAll(this.addKeySpecs());
+		
+		//build 
+		tabSpec.add(this.dbTable.get_Table_Name() + ".build()");
 		return tabSpec;
 	}
 
