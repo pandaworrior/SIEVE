@@ -536,6 +536,7 @@ public class CodePath {
 			
 			//create FieldRepr
 			FieldRepr fR = new FieldRepr();
+			fR.setDBExpr(valueStr);
 			
 			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1, fR);
 			

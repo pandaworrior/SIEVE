@@ -84,7 +84,17 @@ public class UpdateQueryRepr {
 	 */
 	private List<String> genCalSpecs(){
 		List<String> specs = new ArrayList<String>();
-		//TODO: please complete this
+		if(this.sqlStmt instanceof Update) {
+			for(FieldRepr fR : this.modifiedFields) {
+				// need to decide 
+				if(CommonDef.isDBCal(fR.dbExprStr)) {
+					specs.add(CommonDef.getDBCalSpec(fR));
+				}else {
+					// TODO: need to complete this
+					specs.add(fR.df.get_Data_Field_Name() + " = " + fR.params.get(0));
+				}
+			}
+		}
 		return specs;
 	}
 	

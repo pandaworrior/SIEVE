@@ -110,4 +110,29 @@ public class CommonDef {
 		specStr += "}";
 		return specStr;
 	}
+	
+	static boolean isDBCal(String dbExprStr) {
+		if(dbExprStr.contains("+") ||
+				dbExprStr.contains("-") || 
+				dbExprStr.contains("*") ||
+				dbExprStr.contains("/")) {
+			return true;
+		}
+		return false;
+	}
+	
+	static String getDBCalSpec(FieldRepr fR) {
+		String returnStr = fR.df.get_Data_Field_Name() + " = " + fR.df.get_Data_Field_Name() ;
+		if(fR.dbExprStr.contains("+")) {
+			returnStr += " + ";
+		}else if(fR.dbExprStr.contains("-")){
+			returnStr += " - ";
+		}else if(fR.dbExprStr.contains("*")){
+			returnStr += " * ";
+		}else if(fR.dbExprStr.contains("/")){
+			returnStr += " / ";
+		}
+		returnStr += fR.params.get(0);
+		return returnStr;
+	}
 }
