@@ -100,6 +100,8 @@ public class CondPathOprand {
 				specStr += " " + CommonDef.getBinaryOpName(op.toString()) + " ";
 				specStr += this.genExprSpec(rExpr, aM, sInfo) + ")";
 				return specStr;
+			}else if(this.expr instanceof NameExpr){
+				return this.genExprSpec(this.expr, aM, sInfo);
 			}else {
 				return this.expr.toString();	
 			}
