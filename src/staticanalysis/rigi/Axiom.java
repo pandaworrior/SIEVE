@@ -1,13 +1,10 @@
 package staticanalysis.rigi;
 
-public class Axiom {
+public abstract class Axiom {
 	
 	public Axiom() {
-		
 	}
 	
-	public String genAxiomSpec() {
-		return "";
-	}
+	abstract String genAxiomSpec() ;
 
 }

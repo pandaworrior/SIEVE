@@ -233,18 +233,8 @@ public class Z3CodeGenerator {
 		// for argv
 		this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.indentStr + "self.argv = GenArgv");
 		
-		//for Axiom
-		
-		String axiomStr = "";
-		for(CodeTransaction cTxn : this.txnCodeList) {
-			
-		}
-		
-		if(axiomStr.contentEquals("")) {
-			this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.indentStr + "self.axiom = AxiomEmpty()");
-		}else {
-			//TODO: please implement here
-		}
+		// for axiom
+		this.conWriter.appendToFile(CommonDef.indentStr + CommonDef.indentStr + "self.axiom = BuildArgvAxiom(self.ops)");
 	}
 	
 	/**
@@ -281,7 +271,6 @@ public class Z3CodeGenerator {
 		String sfPath = args[3];
 		Z3CodeGenerator codeGen = new Z3CodeGenerator(projectName, pjPath, ffPath, sfPath);
 		codeGen.generateCode();
-		
 	}
 
 }

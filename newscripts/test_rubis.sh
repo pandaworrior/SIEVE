@@ -1,1 +1,1 @@
- java -jar ../dist/exec/z3CodeGen-big.jar rubis /home/cheng/Code/explicit_tradeoff/code/z3/code_rubis/Servlets/metasource/edu/rice/rubis/servlets /home/cheng/Code/explicit_tradeoff/code/z3/code_rubis/transactionMustBeAnalyzed.txt 
+ java -jar ../dist/exec/z3CodeGen-big.jar rubis /home/cheng/Code/explicit_tradeoff/code/z3/code_rubis/Servlets/metasource/edu/rice/rubis/servlets /home/cheng/Code/explicit_tradeoff/code/z3/code_rubis/transactionMustBeAnalyzed.txt  /home/cheng/Code/explicit_tradeoff/code/z3/code_rubis/schema.sql

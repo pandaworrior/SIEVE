@@ -3,6 +3,7 @@ package staticanalysis.rigi;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.update.Update;
 
 /**
@@ -71,8 +72,10 @@ public class UpdateQueryRepr {
 	 */
 	private List<String> genFetchSpecs(){
 		List<String> specs = new ArrayList<String>();
-		for(FieldRepr fR : this.modifiedFields) {
-			specs.add(this.getAttrFetchSpecs(fR));
+		if(this.sqlStmt instanceof Update) {
+			for(FieldRepr fR : this.modifiedFields) {
+				specs.add(this.getAttrFetchSpecs(fR));
+			}
 		}
 		return specs;
 	}
@@ -107,6 +110,12 @@ public class UpdateQueryRepr {
 		//TODO: please complete this
 		if(this.sqlStmt instanceof Update) {
 			String upSpec = "state[\'TABLE_" + this.tableName + "\'].update(";
+			upSpec += CommonDef.getPrimaryKeyString(primaryKeyFields);
+			upSpec += ", " + CommonDef.getModifiedKeyString(modifiedFields);
+			upSpec += ")";
+			specs.add(upSpec);
+		}else if(this.sqlStmt instanceof Insert) {
+			String upSpec = "state[\'TABLE_" + this.tableName + "\'].add(";
 			upSpec += CommonDef.getPrimaryKeyString(primaryKeyFields);
 			upSpec += ", " + CommonDef.getModifiedKeyString(modifiedFields);
 			upSpec += ")";

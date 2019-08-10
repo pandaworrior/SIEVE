@@ -622,23 +622,46 @@ public class CodePath {
 		this.upStmtInfo.add(upRepr);
 	}
 	
+	/**
+	 * process the insert and generate fieldRepr
+	 * @param inStmt
+	 * @param precedingNodeList
+	 */
+	
 	private void processInsertStmt(Insert inStmt, 
 			List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList) {
 		String tableName = inStmt.getTable().getName();
+		
+		//generate a update representation
+	    UpdateQueryRepr upRepr = new UpdateQueryRepr(inStmt, tableName, this.txnName);
 		
 		Iterator colIt = inStmt.getColumns().iterator();
 		int paramIndex = 0;
 		while(colIt.hasNext()) {
 			String columnName = colIt.next().toString();
-			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1, null);
+			FieldRepr fR = new FieldRepr();
+			
+			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, paramIndex + 1, fR);
 			
 			//find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(columnName);
+			
+			fR.setDataField(df);
 			for(String paramStr : paramStrs) {
 				argvsMap.put(paramStr, df);
 			}
 			paramIndex++;
+			
+			if(df.is_Primary_Key()) {
+				upRepr.addOnePrimaryKeyField(fR);
+				if(df.is_AutoIncrement()) {
+					this.axioms.add(new UniqueArgumentAxiom(this.txnName, fR.params.get(0)));
+				}
+			}else {
+				upRepr.addOneModifiedField(fR);
+			}
 		}
+		this.upStmtInfo.add(upRepr);
 	}
 	
 	private void processDeleteStmt(Delete deStmt, 

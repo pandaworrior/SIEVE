@@ -64,7 +64,8 @@ public class CommonDef {
 		}else if(type.toString().contentEquals("String")) {
 			//System.out.println(df.toString());
 			z3Type = "ArgvBuilder.Type.STRING";
-		}else if(type.toString().contentEquals("float")) {
+		}else if(type.toString().contentEquals("float") ||
+				type.toString().contains("double")) {
 			z3Type = "ArgvBuilder.Type.REAL";
 		}else {
 			System.out.println("Undefined data type " + type.toString());
@@ -192,6 +193,10 @@ public class CommonDef {
 			return "!=";
 		}else if(_str.contentEquals("minus")){
 			return "-";
+		}else if (_str.contentEquals("or")) {
+			return "Or";
+		}else if (_str.contentEquals("greater")) {
+			return ">";
 		}else{
 			System.out.println("Not support yet " + _str);
 			System.exit(-1);

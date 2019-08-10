@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import japa.parser.ast.type.Type;
 import japa.parser.ast.body.MethodDeclaration;
 import japa.parser.ast.body.Parameter;
-import japa.parser.ast.body.VariableDeclarator;
 import japa.parser.ast.expr.Expression;
 import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.datastructures.controlflowgraph.CFGGraph;
@@ -73,7 +72,9 @@ public class CodeTransaction {
 				if(cfg.getCfgIdentifier().getShortName().contentEquals(txnName)) {
 					List<Parameter> userDefParams = meDecl.getParameters();
 					for(Parameter p : userDefParams) {
-						if(!p.getType().toString().contentEquals("Connection")) {
+						if(!p.getType().toString().contentEquals("Connection") &&
+								!p.getType().toString().contentEquals("HttpServletRequest") &&
+										!p.getType().toString().contentEquals("HttpServletResponse")) {
 							System.out.println(p.toString() + " " + p.getId().toString());
 							this.userInputs.put(p.getId().toString(), p.getType());
 						}
@@ -154,7 +155,22 @@ public class CodeTransaction {
 			initBodyStr = initBodyStr.substring(0, initBodyStr.length() - 1);
 		}
 		initBodyStr += "]";
-		txnSpecs.add(initBodyStr + "\n");
+		txnSpecs.add(initBodyStr);
+		
+		//add axiom here
+		int num_of_axioms = 0;
+		for(int i = 0; i < this.codePaths.size(); i++) {
+			List<Axiom> axioms = this.codePaths.get(i).axioms;
+			num_of_axioms += axioms.size();
+			for(Axiom axiom : axioms) {
+				txnSpecs.add(CommonDef.indentStr + CommonDef.indentStr + axiom.genAxiomSpec());
+			}
+		}
+		
+		if(num_of_axioms == 0) {
+			txnSpecs.add(CommonDef.indentStr + CommonDef.indentStr + "self.axiom = AxiomEmpty()");
+		}
+		txnSpecs.add("\n");
 		
 		//add code for path
 		for(int i = 0; i < this.codePaths.size(); i++) {

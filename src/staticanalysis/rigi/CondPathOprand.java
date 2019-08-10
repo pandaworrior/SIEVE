@@ -108,11 +108,17 @@ public class CondPathOprand {
 				Expression lExpr = bExpr.getLeft();
 				Expression rExpr = bExpr.getRight();
 				Operator op = bExpr.getOperator();
-				
-				String specStr = "(" + this.genExprSpec(lExpr, aM, sInfo);
-				specStr += " " + CommonDef.getBinaryOpName(op.toString()) + " ";
-				specStr += this.genExprSpec(rExpr, aM, sInfo) + ")";
-				return specStr;
+				if(op.toString().contentEquals("or")) {
+					String specStr = "(" + CommonDef.getBinaryOpName(op.toString());
+					specStr += this.genExprSpec(lExpr, aM, sInfo);
+					specStr += ", " +  this.genExprSpec(rExpr, aM, sInfo) + ")";
+					return specStr;
+				}else {
+					String specStr = "(" + this.genExprSpec(lExpr, aM, sInfo);
+					specStr += " " + CommonDef.getBinaryOpName(op.toString()) + " ";
+					specStr += this.genExprSpec(rExpr, aM, sInfo) + ")";
+					return specStr;
+				}
 			}else if(this.expr instanceof NameExpr){
 				return this.genExprSpec(this.expr, aM, sInfo);
 			}else {
