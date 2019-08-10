@@ -1,11 +1,16 @@
 package staticanalysis.rigi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import util.crdtlib.dbannotationtypes.dbutil.DataField;
+
 
 public class PathCondition {
 	
 	List<Condition> condList;
+
 	
 	public PathCondition() {
 		this.condList = new ArrayList<Condition>();
@@ -15,11 +20,14 @@ public class PathCondition {
 		this.condList.add(cond);
 	}
 	
-	public List<String> genPathCondSpec(int pathIndex){
+	public List<String> genPathCondSpec(int pathIndex,
+			HashMap<String, DataField> aM,
+			HashMap<String, SelectQueryRepr> sInfo){
 		List<String> condSpecs = new ArrayList<String>();
 		
 		String defStr = "def cond" + pathIndex + CommonDef.funcParamStr;
 		condSpecs.add(defStr);
+		
 		
 		String returnStr = CommonDef.indentStr + "return ";
 		if(this.condList.isEmpty()) {
@@ -27,10 +35,11 @@ public class PathCondition {
 		}else {
 			returnStr += "And(";
 			for(Condition cond : this.condList) {
-				//argument get from condition
-				//condSpecs.add(cond.genSpec());
 				
-				returnStr += cond.genSpec() + ",";
+				returnStr += cond.genSpec(aM, sInfo) + ",";
+				
+				//argument get from condition
+				condSpecs.addAll(cond.genArgvSpec());
 			}
 			
 			if(returnStr.endsWith(",")) {

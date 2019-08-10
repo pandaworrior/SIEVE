@@ -65,7 +65,7 @@ public class CodePath {
 	List<UpdateQueryRepr> upStmtInfo;
 	
 	/** Record all select queries and all necessary informations*/
-	static HashMap<String, SelectQueryRepr> selStmtInfo;
+	HashMap<String, SelectQueryRepr> selStmtInfo;
 
 	public CodePath(String _txnName, CFGGraph<CodeNodeIdentifier, Expression> cfg,
 			SchemaParser _sp) {
@@ -73,13 +73,13 @@ public class CodePath {
 		this.pathCfg = cfg;
 		this.selectQueries = new ArrayList<String>();
 		this.updateQueries = new ArrayList<String>();
-		this.pCond = new PathCondition();
 		this.rCond = new ReplicationCondition();
 		this.axioms = new ArrayList<Axiom>();
 		this.argvsMap = new HashMap<String, DataField>();
 		this.dbSchemaParser = _sp;
 		this.upStmtInfo = new ArrayList<UpdateQueryRepr>();
-		selStmtInfo = new HashMap<String, SelectQueryRepr>();
+		this.selStmtInfo = new HashMap<String, SelectQueryRepr>();
+		this.pCond = new PathCondition();
 	}
 
 	private void addOneSelectQuery(String _str) {
@@ -510,7 +510,7 @@ public class CodePath {
 
 				fR.setDataField(df);
 				for(String paramStr : paramStrs) {
-					this.argvsMap.put(paramStr, df);
+					argvsMap.put(paramStr, df);
 				}
 				selRepr.addOneKeyField(fR);
 			}
@@ -530,7 +530,8 @@ public class CodePath {
 	 */
 	private void processPathCondition(CFGNode<CodeNodeIdentifier, Expression> cfgNode,
 			List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList) {
-		this.pCond.addPathCondition(new Condition(cfgNode.getNodeData(), cfgNode.isElsePath(), precedingNodeList));
+		this.pCond.addPathCondition(new Condition(cfgNode.getNodeData(), cfgNode.isElsePath(), precedingNodeList,
+				this.txnName));
 	}
 	
 	/**
@@ -576,7 +577,7 @@ public class CodePath {
 			
 			fR.setDataField(df);
 			for(String paramStr : paramStrs) {
-				this.argvsMap.put(paramStr, df);
+				argvsMap.put(paramStr, df);
 			}
 			
 			paramIndex++;
@@ -607,7 +608,7 @@ public class CodePath {
 			pkFR.setDataField(df);
 			for(String paramStr : paramStrs) {
 				System.out.println("Added paramStr:" + paramStr);
-				this.argvsMap.put(paramStr, df);
+				argvsMap.put(paramStr, df);
 			}
 			
 			//add the pk field back to the qry info
@@ -631,7 +632,7 @@ public class CodePath {
 			//find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(columnName);
 			for(String paramStr : paramStrs) {
-				this.argvsMap.put(paramStr, df);
+				argvsMap.put(paramStr, df);
 			}
 			paramIndex++;
 		}
@@ -671,7 +672,7 @@ public class CodePath {
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(questionMarkStrs.get(i));
 
 			for(String paramStr : paramStrs) {
-				this.argvsMap.put(paramStr, df);
+				argvsMap.put(paramStr, df);
 			}
 		}
 		
@@ -744,7 +745,7 @@ public class CodePath {
 			this.isArgvProcessed = true;
 		}
 		
-		return this.argvsMap;
+		return argvsMap;
 	}
 	
 	private List<String> genSideEffectSpecs(int pathIndex) {
@@ -765,7 +766,8 @@ public class CodePath {
 	
 	public List<String> genCodePathSpec(int pathIndex){
 		List<String> codePathSpecs = new ArrayList<String>();
-		codePathSpecs.addAll(this.pCond.genPathCondSpec(pathIndex));
+		codePathSpecs.addAll(this.pCond.genPathCondSpec(pathIndex,
+				this.argvsMap, this.selStmtInfo));
 		codePathSpecs.add("\n");
 		
 		codePathSpecs.addAll(this.rCond.genReplicationCondSpec(pathIndex));

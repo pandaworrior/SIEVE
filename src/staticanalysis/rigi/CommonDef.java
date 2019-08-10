@@ -1,6 +1,7 @@
 package staticanalysis.rigi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import japa.parser.ast.body.VariableDeclarator;
@@ -8,6 +9,7 @@ import japa.parser.ast.body.VariableDeclaratorId;
 import japa.parser.ast.expr.AssignExpr;
 import japa.parser.ast.expr.BinaryExpr;
 import japa.parser.ast.expr.Expression;
+import japa.parser.ast.expr.IntegerLiteralExpr;
 import japa.parser.ast.expr.MethodCallExpr;
 import japa.parser.ast.expr.NameExpr;
 import japa.parser.ast.expr.QualifiedNameExpr;
@@ -167,7 +169,11 @@ public class CommonDef {
 			return "<";
 		}else if(_str.contentEquals("greaterEquals")) {
 			return ">=";
-		}else {
+		}else if(_str.contentEquals("notEquals")){
+			return "!=";
+		}else if(_str.contentEquals("minus")){
+			return "-";
+		}else{
 			System.out.println("Not support yet " + _str);
 			System.exit(-1);
 		}
@@ -290,11 +296,98 @@ public class CommonDef {
 		throw new RuntimeException("You cannot find preparestmt for resultset");
 	}
 	
+	static int getIndexFromGetExpr(Expression expr) {
+		List<Expression> args = ((MethodCallExpr)expr).getArgs();
+		if(args.size() > 0) {
+			Expression firstArg = args.get(0);
+			if(firstArg instanceof IntegerLiteralExpr) {
+				return Integer.valueOf(firstArg.toString());
+			}
+		}
+		throw new RuntimeException("You cannot find number");
+	}
+	
+	static NameExpr findResultSetExpr(Expression expr) {
+		if(expr instanceof MethodCallExpr) {
+			return (NameExpr)((MethodCallExpr)expr).getScope();
+		}
+		throw new RuntimeException("You cannot find resultset str");
+	}
+	
+	/* think about balance -> balance = rs.getDouble(1) return rs.getDouble(1)
+	 */
+	static Expression findGetIndexExpr(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
+			String targetAttr) {
+		int index = precedingNodeList.size() - 1;
+		while (index >= 0) {
+			Expression expr = precedingNodeList.get(index).getNodeData();
+			if (ExpressionParser.isAssignmentExpr(expr)) {
+				AssignExpr asExp = (AssignExpr) expr;
+				Expression target = asExp.getTarget();
+				if (target instanceof NameExpr) {
+					if (((NameExpr) target).getName().equals(targetAttr)) {
+						// you find this
+						Expression val = asExp.getValue();
+						if(val instanceof MethodCallExpr && val.toString().contains("get")) {
+							return val;
+							/*List<Expression> args = ((MethodCallExpr)val).getArgs();
+							if(args.size() > 0) {
+								Expression firstArg = args.get(0);
+								if(firstArg instanceof IntegerLiteralExpr) {
+									return Integer.valueOf(firstArg.toString());
+								}
+							}*/
+						}
+					}
+				}
+			} else if (ExpressionParser.isVariableDeclarationExpr(expr)) {
+				VariableDeclarationExpr vdExpr = (VariableDeclarationExpr) expr;
+				List<VariableDeclarator> vars = vdExpr.getVars();
+				if (vars != null) {
+					if (vars.size() == 1) {
+						VariableDeclarator varDec = vars.get(0);
+						if(varDec.getId().getName().equals(targetAttr))
+						{
+							Expression val = varDec.getInit();
+							if(val instanceof MethodCallExpr) {
+								return val;
+							}
+						}
+					}
+				}
+			}
+			index--;
+		}
+		throw new RuntimeException("You cannot find getLong or getsomething");
+	}
+	
+	/* think about balance -> balance = rs.getDouble(1) -> rs = stmt.execute ->
+	 * input is the resultset expr
+	 */
+	
+	static String findSqlStatementFromContextForAttr(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
+			Expression expr) {
+		
+		String sqlStr = "";
+		
+		NameExpr stmtStr = findPrepareStmtNameExpr(precedingNodeList, (NameExpr)expr);
+		
+		sqlStr = getSqlStatementFromPrepareStatement(precedingNodeList, stmtStr);
+		
+		sqlStr = CommonDef.trimQuotes(sqlStr);
+		//System.out.println("Trim after " + sqlStr);
+		return sqlStr;
+	}
+	
 	static String findSqlStatementFromContext(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
 			Expression expr) {
 		
 		String sqlStr = "";
 		
+		/* think about two cases: 
+		 * first r0.next() -> r0 = stmt.execute() -> prestmt = "select" 
+		 * second balance -> balance = rs.getDouble(1) -> rs = stmt.execute ->
+		 */
 		MethodCallExpr callExpr = (MethodCallExpr)expr;
 		
 		//result set

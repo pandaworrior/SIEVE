@@ -27,7 +27,7 @@ public class ReplicationCondition {
 		}else {
 			returnStr += "And(";
 			for(Condition cond : this.condList) {
-				condSpecs.add(cond.genSpec());
+				//condSpecs.add(cond.genSpec());
 				
 				//TODO: returnStr and conjuction with predicates
 			}
