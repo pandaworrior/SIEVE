@@ -14,6 +14,7 @@ import japa.parser.ast.expr.MethodCallExpr;
 import japa.parser.ast.expr.NameExpr;
 import japa.parser.ast.expr.QualifiedNameExpr;
 import japa.parser.ast.expr.VariableDeclarationExpr;
+import japa.parser.ast.type.Type;
 import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.codeparser.ExpressionParser;
 import staticanalysis.datastructures.controlflowgraph.CFGNode;
@@ -49,6 +50,24 @@ public class CommonDef {
 			z3Type = "ArgvBuilder.Type.REAL";
 		}else {
 			System.out.println("Undefined data type " + df.get_Data_Type() + " " + df.toString());
+			System.exit(-1);
+		}
+		return z3Type;
+	}
+	
+	static String getArgvBuilderType(Type type) {
+		
+		String z3Type = "";
+		if(type.toString().contentEquals("long") || 
+				type.toString().contentEquals("int")) {
+			z3Type = "ArgvBuilder.Type.INT";
+		}else if(type.toString().contentEquals("String")) {
+			//System.out.println(df.toString());
+			z3Type = "ArgvBuilder.Type.STRING";
+		}else if(type.toString().contentEquals("float")) {
+			z3Type = "ArgvBuilder.Type.REAL";
+		}else {
+			System.out.println("Undefined data type " + type.toString());
 			System.exit(-1);
 		}
 		return z3Type;

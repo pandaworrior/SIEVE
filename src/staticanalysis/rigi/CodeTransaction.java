@@ -6,9 +6,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+import japa.parser.ast.type.Type;
+import japa.parser.ast.body.MethodDeclaration;
+import japa.parser.ast.body.Parameter;
+import japa.parser.ast.body.VariableDeclarator;
 import japa.parser.ast.expr.Expression;
 import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.datastructures.controlflowgraph.CFGGraph;
+import staticanalysis.datastructures.controlflowgraph.CFGNode;
 import util.annotationparser.SchemaParser;
 import util.crdtlib.dbannotationtypes.dbutil.DataField;
 
@@ -28,12 +33,17 @@ public class CodeTransaction {
 	/** The DB Schema Parser. */
 	SchemaParser dbSchemaParser;
 	
+	/** user inputs*/
+	HashMap<String, Type> userInputs;
+	
 	public CodeTransaction(String tName, List<CFGGraph<CodeNodeIdentifier, Expression>> rList,
 			SchemaParser _sp) {
 		this.txnName = tName;
 		this.reducedCfgList = rList;
 		this.codePaths = new ArrayList<CodePath>();
 		this.dbSchemaParser = _sp;
+		this.userInputs = new HashMap<String, Type>();
+		
 		Iterator<CFGGraph<CodeNodeIdentifier, Expression>> pathIt = this.reducedCfgList.iterator();
 		while(pathIt.hasNext()) {
 			CFGGraph<CodeNodeIdentifier, Expression>  cfg = pathIt.next();
@@ -42,6 +52,35 @@ public class CodeTransaction {
 			this.codePaths.add(cPath);
 		}
 		this.eliminatePaths();
+	}
+	
+	/**
+	 * get the user inputs from method delcaration
+	 */
+	
+	private void processUserInputs() {
+		HashMap<MethodDeclaration, CFGGraph<CodeNodeIdentifier, Expression>> methodMap = Z3CodeGenerator.pjsParser.getMethodCfgMapping();
+		
+		CFGGraph<CodeNodeIdentifier, Expression> pathCfg = this.reducedCfgList.get(0);
+		if((pathCfg.getNodeList() !=null) && (pathCfg.getNodeList().size() > 0)) {
+			CFGNode<CodeNodeIdentifier, Expression> cNode = pathCfg.getNodeList().get(0);
+			CodeNodeIdentifier cId = cNode.getNodeId();
+			Iterator<Entry<MethodDeclaration, CFGGraph<CodeNodeIdentifier, Expression>>> methodIt = methodMap.entrySet().iterator();
+			while(methodIt.hasNext()) {
+				Entry<MethodDeclaration, CFGGraph<CodeNodeIdentifier, Expression>> entry = methodIt.next();
+				MethodDeclaration meDecl = entry.getKey();
+				CFGGraph<CodeNodeIdentifier, Expression> cfg = entry.getValue();
+				if(cfg.getCfgIdentifier().getShortName().contentEquals(txnName)) {
+					List<Parameter> userDefParams = meDecl.getParameters();
+					for(Parameter p : userDefParams) {
+						if(!p.getType().toString().contentEquals("Connection")) {
+							System.out.println(p.toString() + " " + p.getId().toString());
+							this.userInputs.put(p.getId().toString(), p.getType());
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	/**
@@ -59,8 +98,19 @@ public class CodeTransaction {
 	}
 	
 	public List<String> genArgvSpecs(){
+		//first process the user input parameters
+		this.processUserInputs();
+		
 		List<String> argvSpecs = new ArrayList<String>();
 		argvSpecs.add("builder.NewOp(\'" + this.txnName + "\')");
+		
+		//gen specs for user inputs
+		Iterator<Entry<String, Type>> userInputIt = this.userInputs.entrySet().iterator();
+		while(userInputIt.hasNext()) {
+			Entry<String, Type> uInput = userInputIt.next();
+			String typeStr = CommonDef.getArgvBuilderType(uInput.getValue());
+			argvSpecs.add("builder.AddArgv(\'" + uInput.getKey() + "\'," + typeStr + ")");
+		}
 		
 		HashMap<String, DataField> allArgvs = new HashMap<String, DataField>();
 		
@@ -70,7 +120,9 @@ public class CodeTransaction {
 			Iterator<Entry<String, DataField>> argvIt = argvMap.entrySet().iterator();
 			while(argvIt.hasNext()) {
 				Entry<String, DataField> argvEntry = argvIt.next();
-				allArgvs.put(argvEntry.getKey(), argvEntry.getValue());
+				if(!this.userInputs.keySet().contains(argvEntry.getKey())) {
+					allArgvs.put(argvEntry.getKey(), argvEntry.getValue());
+				}
 			}
 		}
 		

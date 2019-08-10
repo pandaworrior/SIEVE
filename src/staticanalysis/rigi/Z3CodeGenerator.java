@@ -38,15 +38,23 @@ import util.annotationparser.SchemaParser;
  *     4.1 Propagate the branch condition to if and else paths
  *         -> Done
  *     4.2 gather path conditions
- *         -> Aug 8th
+ *         -> Done
  *     4.3 translate select and include select into path condition
- *         -> Aug 8th
+ *         -> Done
  *  5. side effects collection
  *     5.1 create functions for all paths
- *         -> Aug 8th
+ *         -> Done
  *     5.2 for each path, we translate side effects
- *         -> Aug 8th
- *  6. the rest of code required by Rigi
+ *         -> Update Done
+ *         -> Insert
+ *         -> Delete
+ *  6. Applying Rigi to apps
+ *     6.1 SmallBank
+ *         -> Done
+ *     6.2 Seats
+ *         -> UpdateReservation Done
+ *     6.3 RUBiS
+ *         
  *  7. make courseware run with vasco
  *     -> Aug 9th
  * @author cheng
@@ -62,13 +70,16 @@ public class Z3CodeGenerator {
 	String srcPath;
 	
 	/** Project parser */
-	ProjectParser pjsParser;
+	static ProjectParser pjsParser;
 	
 	/** Tell which set of transactions that we have to analyze*/
 	String filterFile;
 	
 	/** The list of transaction code*/
 	List<CodeTransaction> txnCodeList;
+	
+	/** static hash information*/
+	static HashMap<String, CodeTransaction> txnMap;
 	
 	/** The content writer */
 	ContentWriter conWriter;
@@ -113,6 +124,7 @@ public class Z3CodeGenerator {
 			CodeTransaction codeTxn = new CodeTransaction(txnName, reducedCfgList, this.dbSpec.dbSchemaParser);
 			if(!codeTxn.codePaths.isEmpty()) {
 				this.txnCodeList.add(codeTxn);
+				txnMap.put(txnName, codeTxn);
 			}
 			codeTxn.printInDetails();
 		}
@@ -140,6 +152,7 @@ public class Z3CodeGenerator {
 		
 		// database specs
 		this.dbSpec = new DatabaseSpec(sfPath);
+		txnMap = new HashMap<String, CodeTransaction>();
 	}
 	
 	private void writeHeader() {
@@ -268,6 +281,7 @@ public class Z3CodeGenerator {
 		String sfPath = args[3];
 		Z3CodeGenerator codeGen = new Z3CodeGenerator(projectName, pjPath, ffPath, sfPath);
 		codeGen.generateCode();
+		
 	}
 
 }

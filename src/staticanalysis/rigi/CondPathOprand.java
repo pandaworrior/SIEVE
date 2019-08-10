@@ -38,9 +38,22 @@ public class CondPathOprand {
 		return (aM.get(_expr.toString()) != null);
 	}
 	
+	private boolean isUserInput(Expression _expr) {
+		
+		//get the codetransactoin instance
+		
+		CodeTransaction codeTxn = Z3CodeGenerator.txnMap.get(txnName);
+		if(codeTxn.userInputs.containsKey(_expr.toString())) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
 	private String genExprSpec(Expression _expr, HashMap<String, DataField> aM,
 			HashMap<String, SelectQueryRepr> sInfo) {
-		if(this.isParam(_expr, aM)) {
+		if(this.isParam(_expr, aM) ||
+				this.isUserInput(_expr)) {
 			// that is a parameter
 			this.params.add(_expr.toString());
 			return _expr.toString();
