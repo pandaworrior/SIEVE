@@ -197,7 +197,9 @@ public class CommonDef {
 			return "Or";
 		}else if (_str.contentEquals("greater")) {
 			return ">";
-		}else{
+		}else if(_str.contentEquals("lessEquals")){
+			return "<=";
+		}else {
 			System.out.println("Not support yet " + _str);
 			System.exit(-1);
 		}

@@ -97,6 +97,15 @@ public class UpdateQueryRepr {
 					specs.add(fR.df.get_Data_Field_Name() + " = " + fR.params.get(0));
 				}
 			}
+		}else if(this.sqlStmt instanceof Insert) {
+			for(FieldRepr fR : this.primaryKeyFields) {
+				specs.add(fR.df.get_Data_Field_Name() + " = " + fR.params.get(0));
+			}
+			for(FieldRepr fR : this.modifiedFields) {
+				// need to decide 
+				// TODO: need to complete this
+				specs.add(fR.df.get_Data_Field_Name() + " = " + fR.params.get(0));
+			}
 		}
 		return specs;
 	}

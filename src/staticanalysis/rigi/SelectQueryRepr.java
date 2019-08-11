@@ -8,7 +8,7 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 
 public class SelectQueryRepr {
-net.sf.jsqlparser.statement.Statement sqlStmt;
+	net.sf.jsqlparser.statement.Statement sqlStmt;
 	
 	String txnName;
 	
@@ -28,7 +28,7 @@ net.sf.jsqlparser.statement.Statement sqlStmt;
 	
 	public String genNotNilSpec() {
 		//TODO: across table check
-		String specStr = "state[\'TABLE_" + this.keyFields.get(0).df.get_Table_Name() + "\'].notNil(";
+		String specStr = "state[\'TABLE_" + ((PlainSelect)((Select)sqlStmt).getSelectBody()).getFromItem().toString() + "\'].notNil(";
 		
 		specStr += CommonDef.getPrimaryKeyString(this.keyFields);
 		specStr += ")";
