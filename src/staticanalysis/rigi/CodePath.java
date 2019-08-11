@@ -496,7 +496,8 @@ public class CodePath {
 			List<String> questionMarkStrs = new ArrayList<String>();
 			for (int i = 0; i < subExpressionStrs.length; i++) {
 				if (subExpressionStrs[i].contains("?")) {
-					String tempStr = subExpressionStrs[i].substring(0, subExpressionStrs[i].lastIndexOf('='));
+					String tempStr = subExpressionStrs[i].substring(0, 
+							CommonDef.lastIndexOfSQLBinaryOperator(subExpressionStrs[i]));
 					questionMarkStrs.add(tempStr.trim());
 				}
 			}

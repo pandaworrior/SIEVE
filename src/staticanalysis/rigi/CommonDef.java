@@ -507,4 +507,21 @@ public class CommonDef {
 		}
 	}
 	
+	static int lastIndexOfSQLBinaryOperator(String _str) {
+		if(_str.contains(">=")) {
+			return _str.lastIndexOf(">=");
+		}else if(_str.contains("<=")) {
+			return _str.lastIndexOf("<=");
+		}else if(_str.contains(">")) {
+			return _str.lastIndexOf(">");
+		}else if(_str.contains("<")) {
+			return _str.lastIndexOf("<");
+		}else if(_str.contains("=")) {
+			return _str.lastIndexOf("=");
+		}else {
+			throw new RuntimeException("Not such sql binary operator " + _str);
+		}
+		
+	}
+	
 }

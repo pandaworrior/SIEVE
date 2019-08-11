@@ -270,8 +270,7 @@ public class Z3CodeGenerator {
 		String ffPath = args[2];
 		String sfPath = args[3];
 		Z3CodeGenerator codeGen = new Z3CodeGenerator(projectName, pjPath, ffPath, sfPath);
-		codeGen.generateCode();
-		
+		codeGen.generateCode();	
 	}
 
 }
