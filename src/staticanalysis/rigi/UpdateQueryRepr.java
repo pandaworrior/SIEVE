@@ -3,6 +3,7 @@ package staticanalysis.rigi;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.update.Update;
 
@@ -127,6 +128,11 @@ public class UpdateQueryRepr {
 			String upSpec = "state[\'TABLE_" + this.tableName + "\'].add(";
 			upSpec += CommonDef.getPrimaryKeyString(primaryKeyFields);
 			upSpec += ", " + CommonDef.getModifiedKeyString(modifiedFields);
+			upSpec += ")";
+			specs.add(upSpec);
+		}else if(this.sqlStmt instanceof Delete) {
+			String upSpec = "state[\'TABLE_" + this.tableName + "\'].delete(";
+			upSpec += CommonDef.getPrimaryKeyString(primaryKeyFields);
 			upSpec += ")";
 			specs.add(upSpec);
 		}

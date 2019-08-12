@@ -61,6 +61,8 @@ public class CondPathOprand {
 			// that is a parameter
 			this.params.add(_expr.toString());
 			return _expr.toString();
+		}else if(_expr.toString().contentEquals("null")){
+			return _expr.toString();
 		}else {
 			//first get the resultset.get expr
 			Expression resGetExpr = CommonDef.findGetIndexExpr(precedingNodeList, _expr.toString());
@@ -92,7 +94,7 @@ public class CondPathOprand {
 			String sqlQuery = CommonDef.findSqlStatementFromContextForSetAttr(precedingNodeList, new NameExpr(0,0,0,0, param));
 			
 			if(sqlQuery.contentEquals("")) {
-				System.out.println("That is a user input value");
+				System.out.println("That is a user input value " + this.expr.toString());
 			}else {
 				if(sqlQuery.contains("ORDER BY")) {
 					System.out.println("Handle orderby " + sqlQuery + " " + this.expr.toString() + " " + index);
