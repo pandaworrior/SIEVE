@@ -120,7 +120,9 @@ public class CommonDef {
 	static String getPrimaryKeyString(List<FieldRepr> pkFPs) {
 		String specStr = "{";
 		for(FieldRepr pk : pkFPs) {
-			specStr += "\'" + pk.df.get_Data_Field_Name() + "\' : " + pk.params.get(0) + ",";
+			if(pk.df.is_Primary_Key()) {
+				specStr += "\'" + pk.df.get_Data_Field_Name() + "\' : " + pk.params.get(0) + ",";
+			}
 		}
 		
 		if(specStr.endsWith(",")) {
@@ -518,6 +520,23 @@ public class CommonDef {
 			return _str.lastIndexOf("<");
 		}else if(_str.contains("=")) {
 			return _str.lastIndexOf("=");
+		}else {
+			throw new RuntimeException("Not such sql binary operator " + _str);
+		}
+		
+	}
+	
+	static String getSQLBinaryOperator(String _str) {
+		if(_str.contains(">=")) {
+			return ">=";
+		}else if(_str.contains("<=")) {
+			return "<=";
+		}else if(_str.contains(">")) {
+			return ">";
+		}else if(_str.contains("<")) {
+			return "<";
+		}else if(_str.contains("=")) {
+			return "==";
 		}else {
 			throw new RuntimeException("Not such sql binary operator " + _str);
 		}

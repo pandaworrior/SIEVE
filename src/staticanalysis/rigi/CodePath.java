@@ -492,32 +492,38 @@ public class CodePath {
 				subExpressionStrs[0] = whereClauseStr;
 			}
 			
-			// get question mark
-			List<String> questionMarkStrs = new ArrayList<String>();
+			int indexOfQuestionMark = 1;
 			for (int i = 0; i < subExpressionStrs.length; i++) {
-				if (subExpressionStrs[i].contains("?")) {
-					String tempStr = subExpressionStrs[i].substring(0, 
-							CommonDef.lastIndexOfSQLBinaryOperator(subExpressionStrs[i]));
-					questionMarkStrs.add(tempStr.trim());
-				}
-			}
-
-			// get back from the precedingNodeList
-			for (int i = 0; i < questionMarkStrs.size(); i++) {
-				//create FieldRepr
-				FieldRepr fR = new FieldRepr();
+				String tempStr = subExpressionStrs[i].substring(0, 
+						CommonDef.lastIndexOfSQLBinaryOperator(subExpressionStrs[i]));
 				
-				List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1, fR);
-
 				// find datafield
-				DataField df = this.dbSchemaParser.getDataFieldByName(questionMarkStrs.get(i));
-
-				fR.setDataField(df);
-				for(String paramStr : paramStrs) {
-					argvsMap.put(paramStr, df);
+				DataField leftDf = this.dbSchemaParser.getDataFieldByName(tempStr.trim());
+				
+				if (subExpressionStrs[i].contains("?")) {
+					
+					//create FieldRepr
+					FieldRepr fR = new FieldRepr();
+					
+					List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, indexOfQuestionMark, fR);
+					
+					fR.setDataField(leftDf);
+					for(String paramStr : paramStrs) {
+						argvsMap.put(paramStr, leftDf);
+					}
+					selRepr.addOneKeyField(fR);
+					
+					//create a predicate
+					FieldToParamPredicate pred = new FieldToParamPredicate(leftDf, paramStrs.get(0), indexOfQuestionMark, 
+							subExpressionStrs[i]);
+					selRepr.addOnePredict(pred);
+					
+					indexOfQuestionMark++;
+				}else {
+					// right now we consider field to field TODO: please complete this
 				}
-				selRepr.addOneKeyField(fR);
 			}
+
 			selStmtInfo.put(sqlQuery, selRepr);
 			
 		} catch (JSQLParserException e) {
@@ -669,6 +675,9 @@ public class CodePath {
 			List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList) {
 		String tableName = deStmt.getTable().getName();
 		
+		//generate a update representation
+	    UpdateQueryRepr upRepr = new UpdateQueryRepr(deStmt, tableName, this.txnName);
+		
 		//get the primary key and question mark
 		String whereClauseStr = deStmt.getWhere().toString();
 		
@@ -693,15 +702,27 @@ public class CodePath {
 
 		// get back from the precedingNodeList
 		for (int i = 0; i < questionMarkStrs.size(); i++) {
-			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1, null);
-
+			
+			FieldRepr fR = new FieldRepr();
+			
+			List<String> paramStrs = this.getParamInQueriesByIndex(precedingNodeList, i + 1, fR);
+			
 			// find datafield
 			DataField df = this.dbSchemaParser.getTableByName(tableName).get_Data_Field(questionMarkStrs.get(i));
-
+			fR.setDataField(df);
+			
 			for(String paramStr : paramStrs) {
 				argvsMap.put(paramStr, df);
 			}
+			
+			if(df.is_Primary_Key()) {
+				upRepr.addOnePrimaryKeyField(fR);
+			}else {
+				upRepr.addOneModifiedField(fR);
+			}
 		}
+		
+		this.upStmtInfo.add(upRepr);
 		
 	}
 	

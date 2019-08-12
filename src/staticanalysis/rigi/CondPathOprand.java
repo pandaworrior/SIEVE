@@ -94,7 +94,7 @@ public class CondPathOprand {
 				this.params.addAll(fR.params);
 			}
 			
-			return selRepr.genNotNilSpec();
+			return selRepr.genResultSetSpecTogether();
 		}else {
 			if(this.expr instanceof BooleanLiteralExpr) {
 				if(this.expr.toString().contentEquals("false")) {

@@ -54,7 +54,7 @@ import util.annotationparser.SchemaParser;
  *     6.2 Seats
  *         -> UpdateReservation Done
  *     6.3 RUBiS
- *         
+ *         -> almost done, but the close auction assertion remains a challenge
  *  7. make courseware run with vasco
  *     -> Aug 9th
  * @author cheng
@@ -271,6 +271,7 @@ public class Z3CodeGenerator {
 		String sfPath = args[3];
 		Z3CodeGenerator codeGen = new Z3CodeGenerator(projectName, pjPath, ffPath, sfPath);
 		codeGen.generateCode();	
+		
 	}
 
 }
