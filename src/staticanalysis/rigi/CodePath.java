@@ -23,6 +23,7 @@ import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
+import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.update.Update;
@@ -449,6 +450,8 @@ public class CodePath {
 					if(index == paramIndex) {
 						for(int j = 1; j < argsForExpr.size(); j++) {
 							paramStrs.add(argsForExpr.get(j));
+							//add new condition here
+							this.processPathCondition(precedingNodeList.get(i), precedingNodeList.subList(0, i+1));
 						}
 						if(fR != null) {
 							fR.addParams(paramStrs);
@@ -492,6 +495,7 @@ public class CodePath {
 				subExpressionStrs[0] = whereClauseStr;
 			}
 			
+			
 			int indexOfQuestionMark = 1;
 			for (int i = 0; i < subExpressionStrs.length; i++) {
 				String tempStr = subExpressionStrs[i].substring(0, 
@@ -523,6 +527,18 @@ public class CodePath {
 					// right now we consider field to field TODO: please complete this
 				}
 			}
+			
+			//here we process orderby expression
+			List<OrderByElement> orderByItems = selectStmt.getOrderByElements();
+			if(orderByItems != null) {
+				if(orderByItems.size() > 1) {
+					throw new RuntimeException("Not support if the order by items more than one");
+				}
+				OrderByElement obIt = orderByItems.get(0);
+				OrderByPredicate obPred = new OrderByPredicate(null, obIt.toString());
+				selRepr.addOnePredict(obPred);
+			}
+			
 
 			selStmtInfo.put(sqlQuery, selRepr);
 			

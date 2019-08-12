@@ -60,7 +60,9 @@ public class SelectQueryRepr {
 			//iterate all predicate and get the right form
 			
 			for(Predicate pred : this.predicates) {
-				resultSetSpecs.add(pred.genPredicateSpec(pkStr));
+				if(!(pred instanceof OrderByPredicate)) {
+					resultSetSpecs.add(pred.genPredicateSpec(pkStr));
+				}
 			}
 		}
 		return resultSetSpecs;
@@ -79,6 +81,32 @@ public class SelectQueryRepr {
 			}
 			specStr +=")";
 		}
+		return specStr;
+	}
+	
+	private OrderByPredicate getOrderByPredicate() {
+		for(Predicate pred : this.predicates) {
+			if(pred instanceof OrderByPredicate) {
+				return (OrderByPredicate) pred;
+			}
+		}
+		return null;
+	}
+	
+	public String genOrderBySpec(String colName, String paramName) {
+		String specStr = "state[\'TABLE_" + ((PlainSelect)((Select)sqlStmt).getSelectBody()).getFromItem().toString() + "\'].XYRel(";
+		
+		String tempStr = CommonDef.getModifiedKeyString(this.keyFields);
+		//first the searchable values
+		specStr += tempStr + ",";
+		tempStr = tempStr.substring(0, tempStr.lastIndexOf("}"));
+		specStr += tempStr;
+		specStr += ",\'" + colName + "\':" + paramName + "}"; 
+		
+		//the ordered attr
+		OrderByPredicate pred = this.getOrderByPredicate();
+		specStr += ",\'" + pred.orderByAttr + "\'";
+		specStr += "," +pred.getRelString() + ")";
 		return specStr;
 	}
 	

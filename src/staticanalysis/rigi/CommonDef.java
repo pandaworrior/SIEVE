@@ -321,7 +321,7 @@ public class CommonDef {
 			}
 			index--;
 		}
-		throw new RuntimeException("You cannot find preparestmt for resultset");
+		return null;
 	}
 	
 	static int getIndexFromGetExpr(Expression expr) {
@@ -386,7 +386,7 @@ public class CommonDef {
 			}
 			index--;
 		}
-		throw new RuntimeException("You cannot find getLong or getsomething");
+		return null;
 	}
 	
 	/* think about balance -> balance = rs.getDouble(1) -> rs = stmt.execute ->
@@ -400,10 +400,35 @@ public class CommonDef {
 		
 		NameExpr stmtStr = findPrepareStmtNameExpr(precedingNodeList, (NameExpr)expr);
 		
-		sqlStr = getSqlStatementFromPrepareStatement(precedingNodeList, stmtStr);
+		if(stmtStr != null) {
+			sqlStr = getSqlStatementFromPrepareStatement(precedingNodeList, stmtStr);
+			
+			sqlStr = CommonDef.trimQuotes(sqlStr);
+			//System.out.println("Trim after " + sqlStr);
+		}
+		return sqlStr;
+	}
+	
+	// from setlong(1, name) -> name = rs.getInt => rs => rs = stmt.executeQuery => stmt
+	static String findSqlStatementFromContextForSetAttr(List<CFGNode<CodeNodeIdentifier, Expression>> precedingNodeList,
+			Expression expr) {
 		
-		sqlStr = CommonDef.trimQuotes(sqlStr);
-		//System.out.println("Trim after " + sqlStr);
+ 		String sqlStr = "";
+		
+		Expression resStr = findGetIndexExpr(precedingNodeList, expr.toString());
+		if(resStr != null) {
+			
+			MethodCallExpr callExpr = (MethodCallExpr)resStr;
+		
+			NameExpr stmtStr = findPrepareStmtNameExpr(precedingNodeList, (NameExpr)callExpr.getScope());
+			
+			if(stmtStr != null) {
+				sqlStr = getSqlStatementFromPrepareStatement(precedingNodeList, stmtStr);
+				
+				sqlStr = CommonDef.trimQuotes(sqlStr);
+				//System.out.println("Trim after " + sqlStr);
+			}
+		}
 		return sqlStr;
 	}
 	

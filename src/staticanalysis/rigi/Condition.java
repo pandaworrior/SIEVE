@@ -10,6 +10,8 @@ import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.datastructures.controlflowgraph.CFGNode;
 import util.crdtlib.dbannotationtypes.dbutil.DataField;
 import japa.parser.ast.expr.Expression;
+import japa.parser.ast.expr.MethodCallExpr;
+import japa.parser.ast.expr.NameExpr;
 
 public class Condition {
 	
@@ -44,8 +46,12 @@ public class Condition {
 			this.rightExpr = new CondPathOprand(((BinaryExpr)this.condExpr).getRight(),
 					this.precedingNodeList, this.txnName);
 			this.op = ((BinaryExpr)this.condExpr).getOperator();
-		}else {
-			System.out.println("Rightnow, we do not support non-binary conditional expression " + this.condExpr.toString());
+		}else if(this.condExpr instanceof MethodCallExpr){
+			//handle orderby
+			this.leftExpr = new CondPathOprand(expr,
+					this.precedingNodeList, this.txnName);
+		}else{
+			throw new RuntimeException("Rightnow, we do not support non-binary conditional expression " + this.condExpr.toString());
 		}
 	}
 	
@@ -61,6 +67,11 @@ public class Condition {
 			specStr += " " + CommonDef.getBinaryOpName(this.op.toString()) + " ";
 			specStr += this.rightExpr.genOprandSpec(aM,
 					sInfo) + ")";
+		}else if(this.condExpr instanceof MethodCallExpr){
+			
+			//here we check orderby
+			specStr += this.leftExpr.genOprandSpec(aM, sInfo);
+			
 		}else {
 			specStr += this.condExpr.toString();
 		}

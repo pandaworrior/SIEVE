@@ -36,10 +36,13 @@ public class PathCondition {
 			returnStr += "And(";
 			for(Condition cond : this.condList) {
 				
-				returnStr += cond.genSpec(aM, sInfo) + ",";
-				
-				//argument get from condition
-				condSpecs.addAll(cond.genArgvSpec());
+				String codeSpec = cond.genSpec(aM, sInfo);
+				if(!codeSpec.contentEquals("()")) {
+					returnStr += cond.genSpec(aM, sInfo) + ",";
+					
+					//argument get from condition
+					condSpecs.addAll(cond.genArgvSpec());
+				}
 			}
 			
 			if(returnStr.endsWith(",")) {

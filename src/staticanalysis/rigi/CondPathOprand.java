@@ -1,5 +1,6 @@
 package staticanalysis.rigi;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +10,9 @@ import japa.parser.ast.expr.BinaryExpr.Operator;
 import japa.parser.ast.expr.BooleanLiteralExpr;
 import japa.parser.ast.expr.Expression;
 import japa.parser.ast.expr.NameExpr;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
 import staticanalysis.codeparser.CodeNodeIdentifier;
 import staticanalysis.datastructures.controlflowgraph.CFGNode;
 import util.crdtlib.dbannotationtypes.dbutil.DataField;
@@ -78,6 +82,43 @@ public class CondPathOprand {
 		}
 	}
 	
+	private String genOrderBySpec(HashMap<String, DataField> aM,
+			HashMap<String, SelectQueryRepr> sInfo) {
+		String spec = "";
+		List<String> argsForExpr = CommonDef.getParamStrsFromExpr(expr, null);
+		if(argsForExpr != null && argsForExpr.size() > 1) {
+			int index = Integer.valueOf(argsForExpr.get(0));
+			String param = argsForExpr.get(1);
+			String sqlQuery = CommonDef.findSqlStatementFromContextForSetAttr(precedingNodeList, new NameExpr(0,0,0,0, param));
+			
+			if(sqlQuery.contentEquals("")) {
+				System.out.println("That is a user input value");
+			}else {
+				if(sqlQuery.contains("ORDER BY")) {
+					System.out.println("Handle orderby " + sqlQuery + " " + this.expr.toString() + " " + index);
+					SelectQueryRepr selInfo = sInfo.get(sqlQuery);
+					net.sf.jsqlparser.statement.Statement sqlStmt = null;
+					try {
+						Expression getIndexExpr = CommonDef.findGetIndexExpr(this.precedingNodeList, param);
+						int getIndex = -1;
+						if(getIndexExpr != null) {
+							System.out.println("index str " + getIndexExpr.toString());
+							getIndex = Integer.valueOf(CommonDef.getParamStrsFromExpr(getIndexExpr, null).get(0));
+							sqlStmt = Z3CodeGenerator.cJsqlParser.parse(new StringReader(sqlQuery));
+							spec = selInfo.genOrderBySpec(((PlainSelect)(((Select)sqlStmt).getSelectBody())).getSelectItems().get(getIndex - 1).toString(), param);
+						}
+					} catch (JSQLParserException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						throw new RuntimeException();
+					}
+				}
+			}
+		}
+		
+		return spec;
+	}
+	
 	public String genOprandSpec(HashMap<String, DataField> aM,
 			HashMap<String, SelectQueryRepr> sInfo) {
 		if(this.expr.toString().contains("next")) {
@@ -121,7 +162,10 @@ public class CondPathOprand {
 				}
 			}else if(this.expr instanceof NameExpr){
 				return this.genExprSpec(this.expr, aM, sInfo);
-			}else {
+			}else if(this.expr.toString().contains("set")) {
+				
+				return this.genOrderBySpec(aM, sInfo);
+			}else{
 				return this.expr.toString();	
 			}
 		}
